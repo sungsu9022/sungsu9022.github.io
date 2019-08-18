@@ -2,29 +2,34 @@
 # Must be the same as `author` in `_config.yml`.
 # Change `qwtel` to your shortname (used in the front matter to set a page's author, e.g. `author: qwtel`).
 isme2n:
-  name:              aiden min
-  email:             zooqzqz@gmail.com
+  name:              Sungsu Park
+  email:             sungsu9022@naver.com
 
   # Used at the bottom of each page and at the top of the `about` layout
   # Markdown enabled, can use multiple paragraphs (enabled by `|`)
   about:             |
-    세상에서 가장 게으르기 위해 가장 부지런한 타입.
-    글쓰는 것과 디자인, 개발을 좋아한다. 좋은게 좋은거고, 예쁜게 좋은거고, 노는게 좋은거라고 생각한다. 좋아하는게 많은 편.
+    Hi.
+
+    I've been working as a software developer since 2014.
+
+    I mainly work as a backend developer.
+
+    But I'm also interested in front-end technology.
 
   # This photo will be used in the about section
   picture:
-    src:             /assets/img/me.jpeg
+    src:             /assets/img/personal/me.jpeg
     # srcset is optional, but can be used to provide higher res versions for retina displays
     srcset:
-      1x:            /assets/img/me.jpeg
-      2x:            /assets/img/me.jpeg
+      1x:            /assets/img/personal/me.jpeg
+      2x:            /assets/img/personal/me.jpeg
 
   # Social media icons in sidebar
   # Comment/uncommet to show/hide
   # Icons appear in order, can be rearranged:
   social:
-    facebook:        zooqzqz
-    # twitter:         <username>
+    facebook:        sungsu.park.39
+    twitter:         sungsu9022dev
     # google:          <number>
     # vk:              <username>
     # youtube:         <string_string_string>
@@ -47,7 +52,7 @@ isme2n:
     # pinterest:       <username>
     # foursquare:      <number>
     # yelp:            <string>
-    github:          isme2n
+    github:          sungsu9022
     # stackoverflow:   <number/username>
     # npm:             <username>
     # hackernews:      <username>
@@ -58,8 +63,8 @@ isme2n:
     # delicious:       <username>
     # stumbleupon:     <username>
     # paypal:          <username>
-    email:           mailto:zooqzqz@gmail.com
-    rss:             https://isme2n.github.io/feed.xml
+    email:           sungsu9022@naver.com
+    rss:             https://sungsu9022.github.io/feed.xml
 
 # Another author
 mdo:
