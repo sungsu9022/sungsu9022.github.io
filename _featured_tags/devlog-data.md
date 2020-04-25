@@ -4,5 +4,5 @@ title: Data
 slug: data
 category: devlog
 menu: false
-order: 2
+order: 4
 ---
