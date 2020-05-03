@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "스프링 부트 + JPA + H2 Application 간단하게 띄우기"
-subtitle: "스프링 부트 + JPA + H2 Application"
+title: "Spring Boot + JPA + H2 Application 간단하게 띄우기"
+subtitle: "Spring Boot + JPA + H2 Application"
 categories: devlog
 tags: java
 ---
 
-# 스프링 부트 + JPA + H2 Application 간단하게 띄우기 
+# Spring Boot + JPA + H2 Application 간단하게 띄우기 
 * [1. 프로젝트 만들기](#item1)
 * [2. 애플리케이션 기본 설정](#item2)
 * [3. Web MVC Configuration](#item3)
