@@ -1,8 +1,8 @@
 ---
 layout: tag-blog
-title: React
-slug: react
+title: Platform
+slug: platform
 category: devlog
 menu: false
-order: 10
+order: 8
 ---
