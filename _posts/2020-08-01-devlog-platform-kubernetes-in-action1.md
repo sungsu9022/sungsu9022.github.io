@@ -293,5 +293,5 @@ tags: platform
  - 개발자는 시스템 관리자의 도움 없이도 쿠버네티스로 앱을 배포할 수 있다.
  - 시스템 관리자는 쿠버네티스가 고장 난 노드를 자동으로 처리하도록 할수 있다.
 
-## Refference
-  -[kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+## Reference
+  - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)

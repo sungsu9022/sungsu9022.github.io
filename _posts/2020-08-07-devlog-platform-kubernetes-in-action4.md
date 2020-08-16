@@ -602,7 +602,5 @@ kubectl delete cronjob batch-job-every-fifteen-minutes
  - 특정 시점에 주기적으로 수행해야 하는 잡은 크론잡 리소스를 통해 생성할 수 있다.
 
 
-
-
-## Refference
-  -[kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+## Reference
+  - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)

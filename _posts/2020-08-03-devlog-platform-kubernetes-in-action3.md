@@ -536,5 +536,5 @@ kubectl delete all --all
  - 네임스페이스는 다른 팀들이 동일한 클러스터를 별도 클러스터를 사용하는 것처럼 이용할 수 있게 해준다.
  - kubectl explain 명령으로 쿠버네티스 리소스 도움말을 볼 수 있음.
 
-## Refference
-  -[kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+## Reference
+  - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)

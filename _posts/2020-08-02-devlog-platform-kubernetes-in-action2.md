@@ -351,5 +351,5 @@ kubectl describe pod kubia-5wsx8
 minikube dashboard
 ```
 
-## Refference
-  -[kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+## Reference
+  - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
