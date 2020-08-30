@@ -353,3 +353,4 @@ minikube dashboard
 
 ## Reference
   - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+  - [kubernetes.io](https://kubernetes.io/ko/docs/home/)

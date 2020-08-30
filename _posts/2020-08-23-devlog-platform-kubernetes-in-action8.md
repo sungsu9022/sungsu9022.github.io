@@ -125,7 +125,7 @@ KUBIA_PORT_80_TCP_PROTO=tcp
 HOME=/root
 ```
 
-### 8.1.3 downwardAPI 보륨에 파일로 메타데이터 전달
+### 8.1.3 downwardAPI 볼륨에 파일로 메타데이터 전달
  - 환경변수 대신 파일로 메타데이터를 노출하려는 경우 downwwardAPI 볼륨을 정의해서 컨테이너에 마운트할 수 있다.
  - downward라는 볼륨을 정의하고 컨테이너의 /etc/downward 아래에 마운트하는 예제
 
@@ -223,8 +223,8 @@ spec:
 ```
 
 #### Downward API 사용 시기 이해
- - Downward API를 사용하면 애플리케이션은 쿠버네티스에 독립적으로 유지할 수 있게 한다.(기존에 환경변의 특정 데이터를 활용하는 경우 유요할 수 있다.)
- - Downward API를 통해 사용 가능한 메타데이터는 위 상당히 제한적이라 더 많은 정보를 위해서는 쿠버네티스 API를 통해 가져와야 한다.
+ - Downward API를 사용하면 애플리케이션은 쿠버네티스에 독립적으로 유지할 수 있게 한다.(기존에 환경변수의 특정 데이터를 활용하고 있는 경우 유용할 수도 있다.)
+ - Downward API로 가져올 수 없는 다른 데이터들이 필요한 경우 쿠버네티스 API를 통해 가져와야 한다.
 
 
 ## 8.2 쿠버네티스 API 서버와 통신하기
@@ -467,12 +467,11 @@ kubectl get job my-job -o json
 # 위 2가지 결과는 같다.
 ```
 
-### 8.2.2 파드 내에서 APi 서버와 통신
- - 파드 내에서 통신하려면  APi 서버의 위치를 찾아야하고, 서버로 인증을 해야 한다.
+### 8.2.2 파드 내에서 API 서버와 통신
+ - 파드 내에서 통신하려면  API 서버의 위치를 찾아야하고, 서버로 인증을 해야 한다.
 
 #### API 서버와의 통신을 시도하기 위해 파드 실행
 ``` sh
-# curl을 위한 파드 생성
 kubectl create -f curl.yaml
 
 # 파드의 shell 접근
@@ -558,7 +557,7 @@ curl -H "Authorization: Bearer $TOKEN" https://kubernetes/api/v/namespaces/$NS/p
 
 <img width="575" alt="스크린샷 2020-08-23 오후 11 02 49" src="https://user-images.githubusercontent.com/6982740/90980181-cae2c080-e594-11ea-9c01-59946ba4ece6.png">
 
-### 82.3 앰배서더 컨테이너를 이용한 API 서버 통신 간소화
+### 8.2.3 앰배서더 컨테이너를 이용한 API 서버 통신 간소화
  - 보안을 유지하면서 통신을 훨씬 간단하게 만들수 있다.(kubectl proxy 활용)
 
 #### 앰배서더 컨테이너 패턴 소개
@@ -569,9 +568,9 @@ curl -H "Authorization: Bearer $TOKEN" https://kubernetes/api/v/namespaces/$NS/p
 <img width="474" alt="스크린샷 2020-08-23 오후 11 03 46" src="https://user-images.githubusercontent.com/6982740/90980192-e8178f00-e594-11ea-9768-db60048e3bc9.png">
 
 #### 추가적인 앰배서더 컨테이너를 사용한 curl 파드 실행
- - kubectl proxy는 8001에 바인딩되며 crul localhost:8001에 접속할 수 있다.
+ - kubectl proxy는 8001에 바인딩되며 curl localhost:8001에 접속할 수 있다.
  - 외부 서비스에 연결하는 복잡성을 숨기고 메인 컨테이너에서 실행되는 애플리케이션을 단순화하기 위해 앰배서더 컨테이너를 사용하는 좋은 예시이다.
- - 단점은 추가 프로세스가 실행중이고 추가 리소스가 소비된다는 것이다.
+ - 단점은 추가 프로세스를 실행해야 해서 리소스가 추가로 소비된다는 것이다.
 
 
 ``` yaml
@@ -605,7 +604,7 @@ curl localhost:8001
 
 ### 8.2.4 클라이언트 라이브러리를 사용해 API 서버와 통신
  - 단순한 API 요청 이상을 수행하려면 쿠버네티스 API 클라이언트 라이브러리 중 하나를 사용하는 것이 좋다.
- - https://kubernetes.io/ko/docs/reference/using-api/client-libraries/ ( 다양한 언어를 지원함.)
+ - [https://kubernetes.io/ko/docs/reference/using-api/client-libraries/](https://kubernetes.io/ko/docs/reference/using-api/client-libraries/) ( 다양한 언어를 지원함.)
  - 현재 SIG(Special Interest Group)에서 지원하는 API는 Go, Python, Java ,.net, JavaScript, Haskell이 있다.
  - 이 라이브러리를 사용하는 경우 기본적으로 HTTPS를 지원하고, 인증을 관리하므로 앰배서더 컨테이너를 사용할 필요가 없다.
 
@@ -682,3 +681,4 @@ http://192.168.64.2:8443/swagger-ui
 
 ## Reference
   - [kubernetes-in-action](https://www.manning.com/books/kubernetes-in-action)
+  - [kubernetes.io](https://kubernetes.io/ko/docs/home/)
