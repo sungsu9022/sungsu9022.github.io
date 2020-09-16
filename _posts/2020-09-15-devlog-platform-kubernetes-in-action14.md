@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "[kubernetes-in-action] 13. 클러스터 노드와 네트워크 보안"
-subtitle: "[kubernetes-in-action] 13. 클러스터 노드와 네트워크 보안"
+title: "[kubernetes-in-action] 14. 파드의 컴퓨팅 리소스 관리"
+subtitle: "[kubernetes-in-action] 14. 파드의 컴퓨팅 리소스 관리"
 categories: devlog
 tags: platform
 ---
