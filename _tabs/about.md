@@ -20,16 +20,15 @@ I started a blog to collect what I studied.
 - Web Application for back office
 
 ### 2015.06 ~ now : Naver Corporation -> Naver Webtoon Corporation(from 2018.06)
-#### Push System, Statistics System(~2018)
+#### Push System, Statistics System( ~ 2018)
  - Transfer to another team.
 
-### ~ now
-- All Backend Systems in Global WEBTOON Service
-   - Web( PC, Mobile ) - without markup
-   - API Server for App
-   - Batch System
-   - Web Application for back office
-   - Event Common Platform
+### All Backend Systems in Global WEBTOON Service(~ now)
+ - Web( PC, Mobile ) - without markup
+ - API Server for App
+ - Batch System
+ - Web Application for back office
+ - Event Common Platform
 
 
 ## Education
