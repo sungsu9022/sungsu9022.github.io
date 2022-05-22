@@ -27,7 +27,7 @@ I started a blog to collect what I studied.
  - Web Application for back office
  - Event Common Platform
 
-#### 2021.2 ~ now Part Leadr of Global webtoon Server Team
+#### 2021.2 ~ now Part Leader of Global webtoon Server Team
  - advertisement management system
  - System related business models
  - Event Common Platform
