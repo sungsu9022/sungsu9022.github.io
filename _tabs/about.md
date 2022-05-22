@@ -20,16 +20,17 @@ I started a blog to collect what I studied.
 - Web Application for back office
 
 ### 2015.06 ~ now : Naver Corporation -> Naver Webtoon Corporation(from 2018.06)
-#### Push System, Statistics System( ~ 2018)
- - Transfer to another team.
-
-### All Backend Systems in Global WEBTOON Service(~ now)
+ - All Backend Systems in Global webtoon Service
  - Web( PC, Mobile ) - without markup
  - API Server for App
  - Batch System
  - Web Application for back office
  - Event Common Platform
 
+#### 2021.2 ~ now Part Leadr of Global webtoon Server Team
+ - advertisement management system
+ - System related business models
+ - Event Common Platform
 
 ## Education
 - Bachelor's degree in Dongguk university.
