@@ -24,7 +24,7 @@ tags: [Java, Spring, Hands-On Reactive Programming in Spring 5, Reactive]
   -  tomcat worker thread 외에도 db connection pool, API 서비스 로직에서 호출하는 api client의 thread pool 가용량도 초과하는 경우 동일한 문제가 발생할 수 있음.
 
 ### 어떻게 대응할것인가?
-- 탄력성(elasticity)을 통한 것이다. 트래픽에 따라서 또는 server metric에 따라 탄력적으로 시스템 처리량이 자동 증가/감소할 수 있다면 위와 같은 문제를 해결할 수 있을 것이다.
+- 탄력성(elasticity)을 통한 것이다. 트래픽에 따라서 또는 server metric에 따라 탄력적으로 시스템 처리량이 자동 증가/감소할 수 있다면 위와 같은 문제를 해결할 수 있을 것이다.
 - thread 부족으로 인한 지연시간이 발생하지 않도록 시스템 확장
 - 암달의 법칙(Amdahl's Law)과 건터(Gunther)의 보편적 확장성 모델(Universal Scalability Model)로 설명
 
