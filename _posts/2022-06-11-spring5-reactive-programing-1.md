@@ -1,7 +1,7 @@
 ---
 title: "[Hands-On Reactive Programming in Spring 5] 1. 왜 리액티브 스프링인가?"
 author: sungsu park
-date: 2020-09-03 16:34:00 +0800
+date: 2022-06-11 10:35:00 +0800
 categories: [DevLog, Spring]
 tags: [Java, Spring, Hands-On Reactive Programming in Spring 5, Reactive]
 
@@ -9,7 +9,7 @@ tags: [Java, Spring, Hands-On Reactive Programming in Spring 5, Reactive]
 
 # 1. 왜 리액티브 스프링인가?
 ## 1.1 왜 리액티브인가?
-- 서버진영에서  reactive(반응형)이라는 말이 2019년쯤부터 굉장히 빈번하게 들려왔다.
+- 서버진영에서 reactive(반응형)이라는 말이 2019년쯤부터 굉장히 빈번하게 들려왔다.
 
 ### 시스템의 가용량 예시
 > tomcat worker thread 500으로 설정
@@ -40,6 +40,7 @@ tags: [Java, Spring, Hands-On Reactive Programming in Spring 5, Reactive]
 
 
 ## 1.2 메시지 기반 통신
+
 ``` java
 @RequestMapping("/resource")
 public Object processRequest() {
@@ -77,7 +78,7 @@ public Object processRequest() {
 
 ### 리액티브 선언문
 
-<img width="719" alt="스크린샷 2022-06-11 오후 9 26 27" src="https://user-images.githubusercontent.com/6982740/173187907-1c409647-fae9-4311-821c-9704757703db.png">
+<img width="719" alt="7" src="https://user-images.githubusercontent.com/6982740/173187907-1c409647-fae9-4311-821c-9704757703db.png">
 
 - 모든 비즈니스의 핵심 가치는 응답성이다.
 - 응답성을 확보한다는 것은 탄력성 및 복원력 같은 기법을 따른다는 의미이다.
@@ -85,7 +86,7 @@ public Object processRequest() {
 
 ## 1.3. 반응성에 대한 유스케이스
 
-<img width="628" alt="스크린샷 2022-06-11 오후 9 28 00" src="https://user-images.githubusercontent.com/6982740/173187943-dcdf6e39-a82e-4272-9d2b-cd6116a6aa24.png">
+<img width="628" alt="" src="https://user-images.githubusercontent.com/6982740/173187943-dcdf6e39-a82e-4272-9d2b-cd6116a6aa24.png">
 
 - 위 그림은 modern micro service pattern을 적용한 웹 스토어 아키텍쳐이다.
 - 위치 투명성을 달성하기 위해 api gateway pattern을 사용한다.
@@ -100,13 +101,13 @@ public Object processRequest() {
 - 애널리틱스(analytics)분야는 엄청난 양의 데이터를 다루면서 런타임에 처리하고 사용자에게 실시간으로 통계를 제공해야 할수도 있는데 이런 케이스에서 리액티브가 효과적일 수 있다.
 - 스트리밍(streaming)이라는 효율적인 아키텍쳐를 사용할수 있다.
 
-<img width="781" alt="스크린샷 2022-06-11 오후 9 35 52" src="https://user-images.githubusercontent.com/6982740/173188183-b2354ecc-d02d-433f-94ec-a76fdc6f59cb.png">
+<img width="781" alt="" src="https://user-images.githubusercontent.com/6982740/173188183-b2354ecc-d02d-433f-94ec-a76fdc6f59cb.png">
 
 - 가용성이 높은 시스템을 구축하려면 리액티브 선언문에서 언급한 기본 원칙을 지켜야한다.
   -   복원력 확보를 위해 배압 지원 활성화 등
 
 ## 1.4 서비스 레벨에서의 반응성
->큰 시스템은 더 작은 규모의 시스템들로 구성되기 때문에 구성 요소의 리액티브 특성에 의존한다. 즉 리액티브 시스템은 설게 원칙을 저굥ㅇ하고 이 특성을 모든 규모에 저굥ㅇ해 그 구성요소들을 합성할 수 있게 하는것을 의미힌다. (리액티브 선언문 중)
+> 큰 시스템은 더 작은 규모의 시스템들로 구성되기 때문에 구성 요소의 리액티브 특성에 의존한다. 즉 리액티브 시스템은 설게 원칙을 저굥ㅇ하고 이 특성을 모든 규모에 저굥ㅇ해 그 구성요소들을 합성할 수 있게 하는것을 의미힌다. (리액티브 선언문 중)
 
 - 따라서 구성 요소 수준에서도 리액티브 설계 및 구현을 제공하는 것이 중요하다.
 - 설게 원칙이란 컴포넌트 사이의 관계, 예를 들면 각 기본 요소를 조합하는 데 사용되는 프로그래밍 기법
@@ -133,6 +134,7 @@ class OrdersService {
 - `scService.calculate()`에서 I/O 작업을 수행한다고 가정했을떄 해당 메소드를 수행하는동안 스레드는 blocking된다. orderService에서 별도의 독립적인 처리를 실행하려면 추가 스레드 할당이 필요하다.(하지만 이러하 방식은 낭비이고 리액티브 관점에 본다면 그렇게 하지 말아야 한다.
 
 ### Callback 활용 방식
+
 ``` java
 interface ShoppingCardService {
       void calculate(Input value, Consumer<Output> c);
@@ -152,6 +154,7 @@ public class OrdersService {
 - 실제 자바 코드 관점에서 thread blocking이 발생하기는 하지만 ShoppingCardService로부터 결과를 반환받지않고, OrderService가 작업을 완료 후에 반응할 콜백 함수를 미리 전달하므로 ShoppingCardService로부터 분리(decoupled)됐다고 볼수 있다.
 
 ### Thread 사용 방식
+
  ``` java
 public class AsyncShoppingCardService implements ShoppingCardService {
 
@@ -176,6 +179,7 @@ public class AsyncShoppingCardService implements ShoppingCardService {
 - 다점이라면 공유 데이터 변경 등 롤백 지옥을 피하기 위헤ㅐ 개발자가 멀티 스레딩을 잘 이해해야 한다.
 
 ### Future 사용 방식
+
 ``` java
 public interface ShoppingCardService {
     Future<Output> calculate(Input value);
@@ -202,12 +206,13 @@ public class OrdersService {
     }
 }
 ```
+
 - Future을 삳용하여 결과값 반환을 지연시킬 수 있다.
 - Future을 이용하면 멀티 스레드의 복잡성을 숨길 수 있지만 어쩃든 필요한 결과를 얻으려면 현재 스레드를 블로킹시키는 방식으로 처리해야만 한다. 그래서 이는 확장성을 현저히 저하시킬 수 있다.
 
 
-
 #### CompletableFuture 사용 방식
+
 ``` java
 public interface ShoppingCardService {
     CompletionStage<Output> calculate(Input value);
@@ -249,7 +254,6 @@ public class OrdersService {
 - 책의 내용을 읽고 정리하는 과정에서 느낀 부분은 주로 기존 Spring MVC의 request per thread model의 한계점에 대해 이해하고, webflux 이전 비동기 처리를 어떻게 제공했는지 이 방식에서의 한계점에 대해 간략히 다루는 내용이었습니다.
 - 데이터 소스 레벨까지 리액티브가 가능하다면 이를 사용해서 스레드를 효율적으로 사용할수 있다면 베스트일것이라 생각합니다. 다만 아직 r2dbc와 같은 DB 리애틱브 드라이버가 완벽히 성숙단계에 이른것은 아니므로 RDB로 서비스하는 경우라면 기술 선정에 좀 신중을 가할 필요가 있을것이라 생각됩니다.
 - 반대로 redis, mongodb 등 reactive를 잘 지원할수 있는 스토리지를 사용한다면 reactive를 도입해서 서버의 자원 효율을 증대시키는것도 좋은 방법이라 생각됩니다!
-
 
 ## Reference
   - [Hands-On Reactive Programming in Spring 5](https://www.packtpub.com/product/hands-on-reactive-programming-in-spring-5/9781787284951)
