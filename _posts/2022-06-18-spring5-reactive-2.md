@@ -684,5 +684,5 @@ static class RxSseEmitter extends SseEmitter {
 
 ## Reference
 - CopyOnWriteArraySet : https://coding-start.tistory.com/314
-- JVM Thread Memory usage : https://jsravn.com/2019/05/01/jvm-thread-actual-memory-usage/
+- JVM Thread Memory usage 관련 : https://jsravn.com/2019/05/01/jvm-thread-actual-memory-usage/
 - 웹소켓과 SSE 비교 : https://surviveasdev.tistory.com/entry/%EC%9B%B9%EC%86%8C%EC%BC%93-%EA%B3%BC-SSEServer-Sent-Event-%EC%B0%A8%EC%9D%B4%EC%A0%90-%EC%95%8C%EC%95%84%EB%B3%B4%EA%B3%A0-%EC%82%AC%EC%9A%A9%ED%95%B4%EB%B3%B4%EA%B8%B0
