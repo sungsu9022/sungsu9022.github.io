@@ -317,6 +317,7 @@ eventSource.onerror = e => add('Connection closed');
 </script>
 </body>
 ```
+
 - 웹페이지는 EventSource를 통해 클라이언트 및 서버 접속을 유지하고 이벤트를 수신한다.
 - 또 네트워크 문제 발생이나 접속 시간이 초과하는 경우 자동으로 재접속한다.
 
@@ -326,14 +327,14 @@ eventSource.onerror = e => add('Connection closed');
 - 지금까지 설명한 솔루션에는 몇가지 문제가 있다.
 - Spring에서 제공하는 발행-구독 매커니즘은 애플리케이션 생명주기 이벤트를 처리하기 위해 도입되었고, 고부하 및 고성능 시나리오를 위한 것이 아니다.
 - 또한 비즈니스 로직을 정의하고 구현하기 위해 스프링 내부 매커니즘을 사용해야 하므로 프레임워크의 사소한 변경으로 인해 전체 애플리케이션의 안정성을 위협할 수 있다.
-- 또 많은 메서드에 `@EventListener` 애노테이션이 붙어 있고, 전체 워크플로를 설명하는 한줄의 명시적 스크립트도 없는 애플리케이션이라는 것도 단점일수 있다.
+- 또 많은 메서드에 `@EventListener` 애노테이션이 붙어 있고, 전체 워크플로를 설명하는 한줄의 명시적 스크립트도 없는 애플리케이션이라는 것도 단점일수 있다.
 - `SseEmitter`을 사용하면 스트림의 종료와 오류 처리에 대한 구현을 추가할 수 있지만 `@EventListener`는 그렇지 않다.
 - 이벤트를 비동기적으로 브로드캐스팅하기 위해 스레드풀을 사용하는데 이는 진정한 비동기적 리액티브 접근에서는 필요 없는 일.
 - 이러한 문제점 해결을 위해 널리 채택된 최초의 리액티브 라이브러리인 RxJava를 알아보도록 하자.
 
 
 ## 2.2 리액티브 프레임워크 RxJava
--  현재는 RxJava말고도 Akka Streams와 Reactor 프로젝트도 있으나 시작은 RxJava부터 시작됨.
+- 현재는 RxJava말고도 Akka Streams와 Reactor 프로젝트도 있으나 시작은 RxJava부터 시작됨.
 - Rxjava 라이브러니는 Reacative Extensions(ReactiveX라고도 함)의 자바 구현체이다.
 - 일반적으로 ReactiveX는 관찰자 패턴, 반복자 패턴 및 함수형 프로그래밍의 조합으로 정의된다.
 
@@ -465,7 +466,7 @@ public void managingSubscription2() throws InterruptedException {
 <R> Observable<R> map(Func1<T, R> func)
 ```
 
-- func 함수가 타입 <T>를 타입 <R>로 변환하고, map을 통해 Observable<T>를 Observable<R>로 변환할 수 있음을 의미
+- func 함수가 타입 `<T>`를 타입 `<R>`로 변환하고, map을 통해 `Observable<T>`를 `Observable<R>`로 변환할 수 있음을 의미
 
 <img width="684" alt="스크린샷 2022-06-18 오후 7 03 57" src="https://user-images.githubusercontent.com/6982740/174432955-0b574126-2463-489f-bd5e-281ca18ec5da.png">
 
