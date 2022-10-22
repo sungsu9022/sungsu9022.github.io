@@ -62,6 +62,5 @@ df.show()
 - 스파크 UI는 스피크 집을 튜닝하고 디버깅할 때 매우 유용하다고 합니다.
 
 ## Reference
-- https://sparkbyexamples.com/spark/install-apache-spark-on-mac/
-- https://stackoverflow.com/questions/34601554/mac-spark-shell-error-initializing-sparkcontext
-
+- [https://sparkbyexamples.com/spark/install-apache-spark-on-mac/](https://sparkbyexamples.com/spark/install-apache-spark-on-mac/)
+- [https://stackoverflow.com/questions/34601554/mac-spark-shell-error-initializing-sparkcontext](https://stackoverflow.com/questions/34601554/mac-spark-shell-error-initializing-sparkcontext)
