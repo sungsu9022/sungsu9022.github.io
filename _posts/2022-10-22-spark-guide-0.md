@@ -3,7 +3,7 @@ title: "[스파크 완벽 가이드] 0. 스파크 시작하기"
 author: sungsu park
 date: 2022-10-22 15:46:00 +0800
 categories: [DevLog, Spark]
-tags: [Spark완벽 가이드, Spark, OSX]
+tags: [Spark]
 
 ---
 
