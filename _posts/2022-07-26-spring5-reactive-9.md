@@ -9,8 +9,11 @@ tags: [Java, Spring, Hands-On Reactive Programming in Spring 5, Reactive]
 
 # 9. 리액티브 애플리케이션 테스트하기
 > 테스트 도구에 대한 요구사항
+>
 > StepVerifier를 사용해 Publisher를 테스트할 때의 핵심
+>
 > 고급 StepVerifier 사용 시나리오
+>
 > 웹플럭스 테스트를 위한 툴 세트
 
 ## 9.1 리액티브 스트림을 테스트하기 어려운 이유

@@ -1,7 +1,7 @@
 ---
 title: "[스파크 완벽 가이드] 0. 스파크 시작하기"
 author: sungsu park
-date: 2022-10-22 15:46:00 +0800
+date: 2022-10-21 15:46:00 +0800
 categories: [DevLog, Spark]
 tags: [Spark]
 
@@ -52,7 +52,14 @@ df.show()
 - 이제 책 예제를 실행시켜볼 준비 완료!
 
 
+## 4. `Spark UI`
+- 로컬로 구동시킨 Spark Job의 상태를 확인할수 있는 방법을 제공
+-  spark 3.3.0 기준으로 `http://localhost:4040/` 에서 확인하실 수 있습니다.
 
+<img width="1117" alt="스크린샷 2022-10-22 오후 4 19 04" src="https://user-images.githubusercontent.com/6982740/197326168-e15ed04d-2bdf-440e-8d22-e78fd6b01e1d.png">
+
+- 스피크 UI에서 스피크 Job 상태, 환경 설정, 클러스터 상태 등의 정보를 확인할 수 있습니다.
+- 스파크 UI는 스피크 집을 튜닝하고 디버깅할 때 매우 유용하다고 합니다.
 
 ## Reference
 - https://sparkbyexamples.com/spark/install-apache-spark-on-mac/
