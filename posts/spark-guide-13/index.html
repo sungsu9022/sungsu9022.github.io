@@ -1,0 +1,363 @@
+<!DOCTYPE html><html lang="en" ><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f7f7"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1b1e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="viewport" content="width=device-width, user-scalable=no initial-scale=1, shrink-to-fit=no, viewport-fit=cover" ><meta name="generator" content="Jekyll v4.3.3" /><meta property="og:title" content="[스파크 완벽 가이드] 13. RDD 고급 개념" /><meta name="author" content="sungsu park" /><meta property="og:locale" content="en" /><meta name="description" content="[스파크 완벽 가이드] 13. RDD 고급 개념 핵심 주제 집계와 키-값 형태의 RDD 사용자 정의 파티셔닝 RDD조인" /><meta property="og:description" content="[스파크 완벽 가이드] 13. RDD 고급 개념 핵심 주제 집계와 키-값 형태의 RDD 사용자 정의 파티셔닝 RDD조인" /><link rel="canonical" href="https://sungsu9022.github.io/posts/spark-guide-13/" /><meta property="og:url" content="https://sungsu9022.github.io/posts/spark-guide-13/" /><meta property="og:site_name" content="Sungsu’s Tech Blog" /><meta property="og:type" content="article" /><meta property="article:published_time" content="2022-12-31T19:43:00+09:00" /><meta name="twitter:card" content="summary" /><meta property="twitter:title" content="[스파크 완벽 가이드] 13. RDD 고급 개념" /><meta name="twitter:site" content="@sungsu9022dev" /><meta name="twitter:creator" content="@sungsu park" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"sungsu park"},"dateModified":"2022-12-31T19:43:00+09:00","datePublished":"2022-12-31T19:43:00+09:00","description":"[스파크 완벽 가이드] 13. RDD 고급 개념 핵심 주제 집계와 키-값 형태의 RDD 사용자 정의 파티셔닝 RDD조인","headline":"[스파크 완벽 가이드] 13. RDD 고급 개념","mainEntityOfPage":{"@type":"WebPage","@id":"https://sungsu9022.github.io/posts/spark-guide-13/"},"url":"https://sungsu9022.github.io/posts/spark-guide-13/"}</script><title>[스파크 완벽 가이드] 13. RDD 고급 개념 | Sungsu's Tech Blog</title><link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png"><link rel="manifest" href="/assets/img/favicons/site.webmanifest"><link rel="shortcut icon" href="/assets/img/favicons/favicon.ico"><meta name="apple-mobile-web-app-title" content="Sungsu's Tech Blog"><meta name="application-name" content="Sungsu's Tech Blog"><meta name="msapplication-TileColor" content="#da532c"><meta name="msapplication-config" content="/assets/img/favicons/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.googleapis.com" ><link rel="dns-prefetch" href="https://fonts.googleapis.com" ><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="dns-prefetch" href="https://fonts.gstatic.com" crossorigin><link rel="preconnect" href="https://fonts.googleapis.com" ><link rel="dns-prefetch" href="https://fonts.googleapis.com" ><link rel="preconnect" href="https://cdn.jsdelivr.net" ><link rel="dns-prefetch" href="https://cdn.jsdelivr.net" ><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&family=Source+Sans+Pro:wght@400;600;700;900&display=swap"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="use-credentials"><link rel="dns-prefetch" href="https://www.google-analytics.com"><link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.googletagmanager.com"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.11.2/css/all.min.css"><link rel="stylesheet" href="/assets/css/style.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tocbot@4.20.1/dist/tocbot.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/magnific-popup@1/dist/magnific-popup.min.css"> <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script> <script type="text/javascript"> class ModeToggle { static get MODE_KEY() { return "mode"; } static get MODE_ATTR() { return "data-mode"; } static get DARK_MODE() { return "dark"; } static get LIGHT_MODE() { return "light"; } static get ID() { return "mode-toggle"; } constructor() { if (this.hasMode) { if (this.isDarkMode) { if (!this.isSysDarkPrefer) { this.setDark(); } } else { if (this.isSysDarkPrefer) { this.setLight(); } } } let self = this; /* always follow the system prefers */ this.sysDarkPrefers.addEventListener('change', () => { if (self.hasMode) { if (self.isDarkMode) { if (!self.isSysDarkPrefer) { self.setDark(); } } else { if (self.isSysDarkPrefer) { self.setLight(); } } self.clearMode(); } self.notify(); }); } /* constructor() */ get sysDarkPrefers() { return window.matchMedia("(prefers-color-scheme: dark)"); } get isSysDarkPrefer() { return this.sysDarkPrefers.matches; } get isDarkMode() { return this.mode === ModeToggle.DARK_MODE; } get isLightMode() { return this.mode === ModeToggle.LIGHT_MODE; } get hasMode() { return this.mode != null; } get mode() { return sessionStorage.getItem(ModeToggle.MODE_KEY); } /* get the current mode on screen */ get modeStatus() { if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer)) { return ModeToggle.DARK_MODE; } else { return ModeToggle.LIGHT_MODE; } } setDark() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.DARK_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); } setLight() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.LIGHT_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); } clearMode() { $('html').removeAttr(ModeToggle.MODE_ATTR); sessionStorage.removeItem(ModeToggle.MODE_KEY); } /* Notify another plugins that the theme mode has changed */ notify() { window.postMessage({ direction: ModeToggle.ID, message: this.modeStatus }, "*"); } flipMode() { if (this.hasMode) { if (this.isSysDarkPrefer) { if (this.isLightMode) { this.clearMode(); } else { this.setLight(); } } else { if (this.isDarkMode) { this.clearMode(); } else { this.setDark(); } } } else { if (this.isSysDarkPrefer) { this.setLight(); } else { this.setDark(); } } this.notify(); } /* flipMode() */ } /* ModeToggle */ const modeToggle = new ModeToggle(); </script><body data-topbar-visible="true"><div id="sidebar" class="d-flex flex-column align-items-end"><div class="profile-wrapper text-center"><div id="avatar"> <a href="/" class="mx-auto"> <img src="/assets/img/personal/sunny.jpg" alt="avatar" onerror="this.style.display='none'"> </a></div><div class="site-title"> <a href="/">Sungsu's Tech Blog</a></div><div class="site-subtitle font-italic">Java/Kotlin Spring, Back-end</div></div><ul class="w-100"><li class="nav-item"> <a href="/" class="nav-link"> <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i> <span>HOME</span> </a><li class="nav-item"> <a href="/categories/" class="nav-link"> <i class="fa-fw fas fa-stream ml-xl-3 mr-xl-3 unloaded"></i> <span>CATEGORIES</span> </a><li class="nav-item"> <a href="/tags/" class="nav-link"> <i class="fa-fw fas fa-tag ml-xl-3 mr-xl-3 unloaded"></i> <span>TAGS</span> </a><li class="nav-item"> <a href="/archives/" class="nav-link"> <i class="fa-fw fas fa-archive ml-xl-3 mr-xl-3 unloaded"></i> <span>ARCHIVES</span> </a><li class="nav-item"> <a href="/about/" class="nav-link"> <i class="fa-fw fas fa-info-circle ml-xl-3 mr-xl-3 unloaded"></i> <span>ABOUT</span> </a></ul><div class="sidebar-bottom mt-auto d-flex flex-wrap justify-content-center align-items-center"> <button class="mode-toggle btn" aria-label="Switch Mode"> <i class="fas fa-adjust"></i> </button> <span class="icon-border"></span> <a href="https://github.com/sungsu9022" aria-label="github" target="_blank" rel="noopener noreferrer"> <i class="fab fa-github"></i> </a> <a href="https://twitter.com/sungsu9022dev" aria-label="twitter" target="_blank" rel="noopener noreferrer"> <i class="fab fa-twitter"></i> </a> <a href="javascript:location.href = 'mailto:' + ['sungsu9022','naver.com'].join('@')" aria-label="email" > <i class="fas fa-envelope"></i> </a> <a href="/feed.xml" aria-label="rss" > <i class="fas fa-rss"></i> </a></div></div><div id="topbar-wrapper"><div id="topbar" class="container d-flex align-items-center justify-content-between h-100 pl-3 pr-3 pl-md-4 pr-md-4"> <span id="breadcrumb"> <span> <a href="/"> Home </a> </span> <span>[스파크 완벽 가이드] 13. RDD 고급 개념</span> </span> <i id="sidebar-trigger" class="fas fa-bars fa-fw"></i><div id="topbar-title"> Post</div><i id="search-trigger" class="fas fa-search fa-fw"></i> <span id="search-wrapper" class="align-items-center"> <i class="fas fa-search fa-fw"></i> <input class="form-control" id="search-input" type="search" aria-label="search" autocomplete="off" placeholder="Search..."> </span> <span id="search-cancel" >Cancel</span></div></div><div id="main-wrapper" class="d-flex justify-content-center"><div id="main" class="container pl-xl-4 pr-xl-4"><div class="row"><div id="core-wrapper" class="col-12 col-lg-11 col-xl-9 pr-xl-4"><div class="post pl-1 pr-1 pl-md-2 pr-md-2"><h1 data-toc-skip>[스파크 완벽 가이드] 13. RDD 고급 개념</h1><div class="post-meta text-muted"> <span> Posted <em class="" data-ts="1672483380" data-df="ll" data-toggle="tooltip" data-placement="bottom"> Dec 31, 2022 </em> </span><div class="d-flex justify-content-between"> <span> By <em> <a href=""></a> </em> </span><div> <span class="readtime" data-toggle="tooltip" data-placement="bottom" title="2689 words"> <em>14 min</em> read</span></div></div></div><div class="post-content"><h1 id="스파크-완벽-가이드-13-rdd-고급-개념">[스파크 완벽 가이드] 13. RDD 고급 개념</h1><h2 id="핵심-주제"><span class="mr-2">핵심 주제</span><a href="#핵심-주제" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><blockquote><p>집계와 키-값 형태의 RDD 사용자 정의 파티셔닝 RDD조인</p></blockquote><h2 id="131-키-값-형태의-기초키-값-형태의-rdd"><span class="mr-2">13.1 키-값 형태의 기초(키-값 형태의 RDD)</span><a href="#131-키-값-형태의-기초키-값-형태의-rdd" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>데이터를 키-값 형태로 다룰수 있는 메소드<li><code class="language-plaintext highlighter-rouge">~byKey</code> 류는 PairRDD 만 사용 가능 (ex. <code class="language-plaintext highlighter-rouge">Pair(“s”, “Scala”)</code>)</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre><span class="nv">words</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">,</span> <span class="mi">1</span><span class="o">))</span>
+</pre></table></code></div></div><h3 id="1311-keyby"><span class="mr-2">13.1.1 <code class="language-plaintext highlighter-rouge">keyBy</code></span><a href="#1311-keyby" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>현재 값으로부터 키 생성</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">keyword</span> <span class="k">=</span> <span class="nv">words</span><span class="o">.</span><span class="py">keyBy</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">(</span><span class="mi">0</span><span class="o">).</span><span class="py">toString</span><span class="o">)</span>
+</pre></table></code></div></div><h3 id="1312-값-매핑하기"><span class="mr-2">13.1.2 값 매핑하기</span><a href="#1312-값-매핑하기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><h4 id="mapvalues"><span class="mr-2"><code class="language-plaintext highlighter-rouge">mapValues</code></span><a href="#mapvalues" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>스파크에서는 튜플인 경우 첫번째 요소를 키, 두번쨰 요소를 값으로 추정<li>튜플에서 값만 추출</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre><td class="rouge-code"><pre><span class="nv">keyword</span><span class="o">.</span><span class="py">mapValues</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="nv">word</span><span class="o">.</span><span class="py">toUpperCase</span><span class="o">).</span><span class="py">collect</span><span class="o">(</span> <span class="o">)</span>
+
+<span class="o">[</span>
+	<span class="o">(</span><span class="err">'</span><span class="kt">s</span><span class="err">'</span>, <span class="err">'</span><span class="kt">SPARK</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">t</span><span class="err">'</span>, <span class="err">'</span><span class="kt">THE</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">d</span><span class="err">'</span>, <span class="err">'</span><span class="kt">DEFINITIVE</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">g</span><span class="err">'</span>, ,<span class="err">'</span><span class="kt">GUIDE</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">:</span><span class="err">'</span> <span class="err">'</span><span class="kt">:</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">b</span><span class="err">'</span>, <span class="err">'</span><span class="kt">BIG</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">d</span><span class="err">'</span>, <span class="err">'</span><span class="kt">DATA</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">p</span><span class="err">'</span>, <span class="err">'</span><span class="kt">PROCESSING</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">m</span><span class="err">'</span>, <span class="err">'</span><span class="kt">MADE</span><span class="err">'</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">s</span><span class="err">'</span>, <span class="err">'</span><span class="kt">SIMPLE</span><span class="err">'</span><span class="o">)</span>
+<span class="o">]</span>
+</pre></table></code></div></div><h4 id="flatmapvalues"><span class="mr-2"><code class="language-plaintext highlighter-rouge">flatMapValues</code></span><a href="#flatmapvalues" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre><span class="nv">keyword</span><span class="o">.</span><span class="py">flatMapValues</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span><span class="nv">word</span><span class="o">.</span><span class="py">toUpperCase</span><span class="o">).</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><p><a href="https://user-images.githubusercontent.com/6982740/210165469-d0c9fc4b-d3d7-4aca-9440-937db9855b04.png" class="popup img-link "><img width="1376" alt="스크린샷 2023-01-01 오후 5 47 31" data-src="https://user-images.githubusercontent.com/6982740/210165469-d0c9fc4b-d3d7-4aca-9440-937db9855b04.png" class="lazyload" data-proofer-ignore></a></p><h3 id="1313-키와-값-추출하기"><span class="mr-2">13.1.3 키와 값 추출하기</span><a href="#1313-키와-값-추출하기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li><code class="language-plaintext highlighter-rouge">keys</code> , <code class="language-plaintext highlighter-rouge">values</code></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre><span class="nv">keyword</span><span class="o">.</span><span class="py">keys</span><span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+<span class="nv">keyWord</span><span class="o">.</span><span class="py">values</span><span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><h3 id="1314-lookup"><span class="mr-2">13.1.4 <code class="language-plaintext highlighter-rouge">lookup</code></span><a href="#1314-lookup" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>특정 키에 관한 결과 검색</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre><span class="nv">keyword</span><span class="o">.</span><span class="py">lookup</span><span class="o">(</span><span class="s">"s"</span><span class="o">)</span>
+
+<span class="c1">// 키가 "s"인 Spark와 Simpe 반환</span>
+</pre></table></code></div></div><h3 id="1315-samplebykey"><span class="mr-2">13.1.5 <code class="language-plaintext highlighter-rouge">sampleByKey</code></span><a href="#1315-samplebykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>근사치나 정확도를 이용해서 키 기반 RDD 샘플 생성<li>간단한 무작위 샘플링을 사용</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">scala.util.Random</span>
+
+<span class="k">val</span> <span class="nv">distinctchars</span> <span class="k">=</span> <span class="nv">words</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">).</span><span class="py">distinct</span>
+<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+
+<span class="c1">// sampleByKey</span>
+<span class="k">val</span> <span class="nv">sampleMap</span> <span class="k">=</span> <span class="nv">distinctChars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">c</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Random</span><span class="o">().</span><span class="py">nextDouble</span><span class="o">())).</span><span class="py">toMap</span>
+<span class="n">words</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span> <span class="n">word</span><span class="o">))</span>
+	<span class="o">.</span><span class="py">sampleByKey</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="n">sampleMap</span><span class="o">,</span> <span class="mi">6L</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+
+<span class="c1">// sampleByKeyExact</span>
+<span class="k">val</span> <span class="nv">sampleByKeyExact</span> <span class="k">=</span> <span class="n">words</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">(</span><span class="mi">0</span><span class="o">),</span> <span class="n">word</span><span class="o">))</span>
+	<span class="o">.</span><span class="py">sampleByKeyExact</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="n">sampleMap</span><span class="o">,</span> <span class="mi">6L</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><ul><li>99.99% 신뢰도를 가진 모든 키 값에 대해서 RDD를 추가로 처리하므로 <code class="language-plaintext highlighter-rouge">math.ceil (numltems * samplingRate)</code>의 합과 완전히 동일한 크기의 샘플 데이터를 생성</ul><h2 id="13-2-집계"><span class="mr-2">13. 2 집계</span><a href="#13-2-집계" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>RDD 또는 PairRDD를 사용해 집계 수행</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">chars</span> <span class="k">=</span> <span class="nv">words</span><span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">)</span>
+<span class="k">val</span> <span class="nv">KVcharacters</span> <span class="k">=</span> <span class="nv">chars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">letter</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">letter</span><span class="o">,</span> <span class="mi">1</span><span class="o">))</span>
+
+<span class="k">def</span> <span class="nf">maxFunc</span><span class="o">(</span><span class="n">left</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">right</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="nv">math</span><span class="o">.</span><span class="py">max</span><span class="o">(</span><span class="n">left</span><span class="o">,</span> <span class="n">right</span><span class="o">)</span>
+<span class="k">def</span> <span class="nf">addFunc</span><span class="o">(</span><span class="n">left</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">right</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="n">left</span> <span class="o">+</span> <span class="n">right</span>
+
+<span class="k">val</span> <span class="nv">nums</span> <span class="k">=</span> <span class="nv">sc</span><span class="o">.</span><span class="py">parallelize</span><span class="o">(</span><span class="mi">1</span> <span class="n">to</span> <span class="mi">30</span><span class="o">,</span> <span class="mi">5</span><span class="o">)</span>
+</pre></table></code></div></div><h3 id="1321-countbykey"><span class="mr-2">13.2.1 <code class="language-plaintext highlighter-rouge">countByKey</code></span><a href="#1321-countbykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>각 키의 아이템 수를 구하고 맵으로 결과 반환<ul><li>Scala 또는 java에서는 timeout과 신뢰도를 인수로 지정해 근사치를 구할 수 있음.</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">timeout</span> <span class="k">=</span> <span class="mi">1000L</span> <span class="c1">// 일리세컨드 단위</span>
+<span class="k">val</span> <span class="nv">confidence</span> <span class="k">=</span> <span class="mf">0.95</span>
+
+<span class="nv">KVcharacters</span><span class="o">.</span><span class="py">countByKey</span><span class="o">()</span>
+<span class="nv">KVcharacters</span><span class="o">.</span><span class="py">countByKeyApprox</span><span class="o">(</span><span class="n">timeout</span><span class="o">,</span> <span class="n">confidence</span><span class="o">)</span>
+</pre></table></code></div></div><h3 id="1322-집계-연산-구현-방식-이해"><span class="mr-2">13.2.2 집계 연산 구현 방식 이해</span><a href="#1322-집계-연산-구현-방식-이해" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>키-값 형태의 PairRDD 생성하는 몇가지 방식</ul><h4 id="groupbykey"><span class="mr-2"><code class="language-plaintext highlighter-rouge">groupByKey</code></span><a href="#groupbykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre><span class="nc">KVcharacters</span>
+	<span class="o">.</span><span class="py">groupByKey</span><span class="o">()</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">row</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="nv">row</span><span class="o">.</span><span class="py">_1</span><span class="o">,</span> <span class="nv">row</span><span class="o">.</span><span class="py">_2</span><span class="o">.</span><span class="py">reduce</span><span class="o">(</span><span class="n">addFunc</span><span class="o">)))</span>
+	<span class="o">.</span><span class="py">count</span><span class="o">()</span>
+</pre></table></code></div></div><ul><li>사용시 주의사항<ul><li>모든 익스큐터에서 함수를 적용하기 전에 해당 키와 관련된 모든 값을 메모리에 올려야하는 문제<ul><li>심각하게 치우쳐진 키가 있다면 일부 파티션에서 OOM이 발생할 수 있음.</ul><li>각 키에 대한 값의 크기가 일정하고, 익스큐터에 할당된 메모리에서 처리 가능할 정도의 크기 인 경우에만 <code class="language-plaintext highlighter-rouge">groupByKey</code> 사용</ul></ul><h4 id="reducebykey"><span class="mr-2"><code class="language-plaintext highlighter-rouge">reduceByKey</code></span><a href="#reducebykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>각 파티션에서 리듀스 작업을 수행하기 떄문에 훨씬 안정적이고, 모든 값을 메모리에 유지할 필요가 없음.<li>최종 리듀스 과정을 제외한 모든 작업은 개별 워커에서 처리하므로 연산 수행 속도도 향상될 수 있음.</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre><span class="nc">KVcharacters</span>
+	<span class="o">.</span><span class="py">reduceByKey</span><span class="o">(</span><span class="n">addFunc</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+
+<span class="c1">// key별 그룹 RDD Array 반환</span>
+<span class="c1">// Array((d,4), (p,3), (t,3), (b,1), (h,1), (n,2), (a,4), (i,7), (k,1), (u,1), (o,1), (g,3), (m,2), (c,1))</span>
+</pre></table></code></div></div><ul><li>정렬되어 있지 않기 떄문에 작업 부하를 줄일수는 있으나, 순서가 중요한 경우 적합하지 않음.</ul><h3 id="1323-기타-집계-메서드"><span class="mr-2">13.2.3 기타 집계 메서드</span><a href="#1323-기타-집계-메서드" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>대부분은 구조적 API를 사용하면 간단히 집계를 수행할수 있음.<li>고급 집계 함수를 사용해 클러스터 노드에서 수행하는 집계를 구체적이고 세밀하게 제어 가능</ul><h4 id="aggregate"><span class="mr-2"><code class="language-plaintext highlighter-rouge">aggregate</code></span><a href="#aggregate" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="nv">nums</span><span class="o">.</span><span class="py">aggregate</span><span class="o">(</span><span class="mi">0</span><span class="o">)(</span><span class="n">maxFunc</span><span class="o">,</span> <span class="n">addFunc</span><span class="o">)</span>
+
+<span class="c1">// nulll 또는 집계의 시작값 필요</span>
+<span class="c1">// 첫번쨰 함수 : 파티션 내에서 수행</span>
+<span class="c1">// 두번째 함수 : 모든 파티션에 걸쳐 수행</span>
+</pre></table></code></div></div><ul><li>드라이버에서 최종 집계를 수행하므로 성능에 영향이 있음.<ul><li>executor의 결과가 너무 크면 OOM 발생할수 있음.</ul></ul><h4 id="treeaggreate"><span class="mr-2"><code class="language-plaintext highlighter-rouge">treeAggreate</code></span><a href="#treeaggreate" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">depth</span> <span class="k">=</span> <span class="mi">3</span>
+<span class="nv">nums</span><span class="o">.</span><span class="py">treeAggregate</span><span class="o">(</span><span class="mi">0</span><span class="o">)(</span><span class="n">maxFunc</span><span class="o">,</span> <span class="n">addFunc</span><span class="o">,</span> <span class="n">depth</span><span class="o">)</span>
+</pre></table></code></div></div><ul><li><code class="language-plaintext highlighter-rouge">treeAggregate</code> 를 이용하면 처리과정은 다르지만 같은 결과를 얻을 수 있음.<ul><li>executor끼리 트리를 형성해 집계 처리의 일부 하위 과정을 push down 방식으로 먼저 수행</ul></ul><h4 id="aggregatebykey"><span class="mr-2"><code class="language-plaintext highlighter-rouge">aggregateByKey</code></span><a href="#aggregatebykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>aggregate 함수와 동일하지만 파티션 대신 키를 기준으로 연산 수행</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre><span class="nc">KVcharacters</span>
+	<span class="o">.</span><span class="py">aggregateByKey</span><span class="o">(</span><span class="mi">0</span><span class="o">)(</span><span class="n">addFunc</span><span class="o">,</span> <span class="n">maxFunC</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><h4 id="combinebykey"><span class="mr-2"><code class="language-plaintext highlighter-rouge">combineByKey</code></span><a href="#combinebykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>집계 함수 대신 comniner를 사용<ul><li>key를 기준으로 연산을 수행하고, 파라미터로 사용된 함수에 따라 값을 병합</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">valToCombiner</span> <span class="k">=</span> <span class="o">(</span><span class="n">value</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">List</span><span class="o">(</span><span class="n">value</span><span class="o">)</span>
+<span class="k">val</span> <span class="nv">mergeValuesFunc</span> <span class="k">=</span> <span class="o">(</span><span class="n">vals</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="n">valToAppend</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">valToAppend</span> <span class="o">::</span> <span class="n">vals</span>
+<span class="k">val</span> <span class="nv">mergeCombinerFunc</span> <span class="k">=</span> <span class="o">(</span><span class="n">vals1</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="n">vals2</span><span class="k">:</span><span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span> <span class="k">=&gt;</span> <span class="n">vals1</span> <span class="o">:::</span> <span class="n">vals2</span>
+<span class="c1">// 함수형 변수 정의도 가능</span>
+<span class="k">val</span> <span class="nv">outputPartitions</span> <span class="k">=</span> <span class="mi">6</span>
+
+<span class="k">val</span> <span class="nv">result</span> <span class="k">=</span> <span class="nc">KVcharacters</span>
+	<span class="o">.</span><span class="py">combineByKey</span><span class="o">(</span>
+		<span class="n">valToCombiner</span><span class="o">,</span>
+		<span class="n">mergeValuesFunc</span><span class="o">,</span>
+		<span class="n">mergeCombinerFunc</span><span class="o">,</span>
+		<span class="n">outputPartitions</span>
+	<span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><h4 id="foldbykey"><span class="mr-2"><code class="language-plaintext highlighter-rouge">foldByKey</code></span><a href="#foldbykey" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>결합 함수와 항등원(neutral)인 제로값을 이용해 각 키의 값을 병합</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre><span class="nc">KVcharacters</span>
+	<span class="o">.</span><span class="py">foldByKey</span><span class="o">(</span><span class="mi">0</span><span class="o">)(</span><span class="n">addFunc</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">collect</span><span class="o">()</span>
+</pre></table></code></div></div><h2 id="133-cogroup"><span class="mr-2">13.3 cogroup</span><a href="#133-cogroup" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>RDD에 대한 그룹 기반의 조인을 수행<ul><li>스칼라 : 3개, 파이썬 2개의 키-값 형태의 RDD를 그룹화할 수 있음.<li>출력 파티션 수나 클러스터에 데이터 분산 방식 제어를 위한 사용자 정의 파라미터 제공</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">scala.util.Random</span>
+
+<span class="k">val</span> <span class="nv">distinctChars</span> <span class="k">=</span> <span class="n">words</span>
+	<span class="o">.</span><span class="py">flatMap</span><span class="o">(</span><span class="n">word</span> <span class="k">=&gt;</span> <span class="nv">word</span><span class="o">.</span><span class="py">toLowerCase</span><span class="o">.</span><span class="py">toSeq</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">distinct</span>
+
+<span class="k">val</span> <span class="nv">charRDD</span> <span class="k">=</span> <span class="nv">distinctChars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">c</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Random</span><span class="o">().</span><span class="py">nextDouble</span><span class="o">()))</span>
+<span class="k">val</span> <span class="nv">charRDD2</span> <span class="k">=</span> <span class="nv">distinctChars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">c</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Random</span><span class="o">().</span><span class="py">nextDouble</span><span class="o">()))</span>
+<span class="k">val</span> <span class="nv">charRDD3</span> <span class="k">=</span> <span class="nv">distinctChars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">c</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">c</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Random</span><span class="o">().</span><span class="py">nextDouble</span><span class="o">()))</span>
+
+<span class="n">charRDD</span>
+	<span class="o">.</span><span class="py">cogroup</span><span class="o">(</span><span class="n">charRDD2</span><span class="o">,</span> <span class="n">charRDD3</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+</pre></table></code></div></div><p><a href="https://user-images.githubusercontent.com/6982740/210165527-a92dfc3f-b2d5-4417-a238-679ccaf0db01.png" class="popup img-link "><img width="1370" alt="스크린샷 2023-01-01 오후 5 49 33" data-src="https://user-images.githubusercontent.com/6982740/210165527-a92dfc3f-b2d5-4417-a238-679ccaf0db01.png" class="lazyload" data-proofer-ignore></a></p><h2 id="134-join"><span class="mr-2">13.4 JOIN</span><a href="#134-join" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>구조적 API와 동일한 조인 방식을 가지고 있지만, RDD를 사용하면 사용자가 많은 부분을 관여해야 함.<ul><li>출력 파티션 수나 사용자 정의 파티션 함수 파라미터 사용</ul></ul><h3 id="1341-inner-join"><span class="mr-2">13.4.1 <code class="language-plaintext highlighter-rouge">INNER JOIN</code></span><a href="#1341-inner-join" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">keyedChars</span> <span class="k">=</span> <span class="nv">distinctChars</span><span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">C</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">C</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Random</span><span class="o">().</span><span class="py">nextDouble</span><span class="o">()))</span>
+<span class="k">val</span> <span class="nv">outputPartitions</span> <span class="k">=</span> <span class="mi">10</span>
+
+<span class="nv">KVcharacters</span><span class="o">.</span><span class="py">join</span><span class="o">(</span><span class="n">keyedChars</span><span class="o">).</span><span class="py">count</span><span class="o">()</span>
+<span class="nv">KVcharacters</span><span class="o">.</span><span class="py">join</span><span class="o">(</span><span class="n">keyedChars</span><span class="o">,</span> <span class="n">outputPartitions</span><span class="o">).</span><span class="py">count</span><span class="o">()</span>
+</pre></table></code></div></div><ul><li>이 외의 조인들도 동일한 기본 형식을 따름</ul><h3 id="1342-zip"><span class="mr-2">13.4.2 <code class="language-plaintext highlighter-rouge">zip</code></span><a href="#1342-zip" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>실제로 JOIN은 아니고 두 개의 RDD를 결합하는 방식<ul><li>동일한 길이의 2개의 RDD를 zipper를 잠그듯이 연결하여 PairRDD 생성<li>요소와 파티션수가 일치해야 함.</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">numRange</span> <span class="k">=</span> <span class="nv">sc</span><span class="o">.</span><span class="py">parallelize</span><span class="o">(</span><span class="mi">0</span> <span class="n">to</span> <span class="mi">9</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span>
+<span class="nv">words</span><span class="o">.</span><span class="py">zip</span><span class="o">(</span><span class="n">numRange</span><span class="o">).</span><span class="py">collect</span><span class="o">()</span>
+
+<span class="o">[</span>
+	<span class="o">(</span><span class="err">'</span><span class="kt">Spark</span><span class="err">'</span>, <span class="err">0</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">The</span><span class="err">'</span>, <span class="err">1</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Definitive</span><span class="err">'</span>, <span class="err">2</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Guide</span><span class="err">'</span>, <span class="err">3</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">:</span><span class="err">'</span>, <span class="err">4</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Big</span><span class="err">'</span>, <span class="err">5</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Data</span><span class="err">'</span>, <span class="err">6</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">ProceSsing</span><span class="err">'</span>, <span class="err">7</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Made</span><span class="err">'</span>, <span class="err">8</span><span class="o">)</span>,
+	<span class="o">(</span><span class="err">'</span><span class="kt">Simple</span><span class="err">'</span>, <span class="err">9</span><span class="o">)</span>
+<span class="o">]</span>
+</pre></table></code></div></div><h2 id="135-파티션-제어하기"><span class="mr-2">13.5 파티션 제어하기</span><a href="#135-파티션-제어하기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>RDD를 사용하면 데이터가 클러스터 전체에 물리적으로 정확히 분산되는 방식으로 정의 할 수 있음.<li>기본적으로 구조적 API와 동일</ul><h4 id="구조적-api와-차이점"><span class="mr-2">구조적 API와 차이점</span><a href="#구조적-api와-차이점" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파티션 함수를 파라미터로 사용할 수 있음.<ul><li>사용자 지정 Partitioner</ul></ul><h3 id="1351-coalesce"><span class="mr-2">13.5.1 <code class="language-plaintext highlighter-rouge">coalesce</code></span><a href="#1351-coalesce" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>파티션을 재분배할 떄 발생하는 데이터 셔플을 방지하기 위해 동일한 워커에 존재하는 파티션을 합치는 메서드<ul><li>2개의 파티션으로 구성된 words RDD를 셔플링 없이 하나의 파티션으로 합친다.</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre><span class="nv">words</span><span class="o">.</span><span class="py">coalesce</span><span class="o">(</span><span class="mi">1</span><span class="o">).</span><span class="py">getNumPartitions</span> <span class="c1">// 값은1</span>
+</pre></table></code></div></div><h3 id="1352-repartition"><span class="mr-2">13.5.2 <code class="language-plaintext highlighter-rouge">repartition</code></span><a href="#1352-repartition" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>파티션 수를 늘리거나 줄일 때 사용(노드간 셔플 발생할 수 있음)<ul><li>파티션 수를 늘리면 필터 map or filter 타입의 연산을 수행할때 병렬 처리 수준을 높일 수 있음</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre><span class="nv">words</span><span class="o">.</span><span class="py">repartition</span><span class="o">(</span><span class="mi">10</span><span class="o">)</span> <span class="c1">// 10개의 파티션이 생성됩니다</span>
+</pre></table></code></div></div><h3 id="1353-repartitionandsortwithinpartitions"><span class="mr-2">13.5.3 <code class="language-plaintext highlighter-rouge">repartitionAndSortWithinPartitions</code></span><a href="#1353-repartitionandsortwithinpartitions" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>파티션을 재분배할 수 있고, 재분배된 결과 파티션의 정렬 방식을 지정<ul><li>partition연산을 할때 key에대해서 sorting</ul></ul><p><a href="https://spark.apache.org/docs/2.2.0/api/java/org/apache/spark/rdd/OrderedRDDFunctions.html#repartitionAndSortWithinPartitions-org.apache.spark.Partitioner">https://spark.apache.org/docs/2.2.0/api/java/org/apache/spark/rdd/OrderedRDDFunctions.html#repartitionAndSortWithinPartitions-org.apache.spark.Partitioner</a></p><ul><li>문서는 보기 좋지 않아보임.<li>셔플링 단계에서 정렬 작업을 함께 수행하기 때문에 <code class="language-plaintext highlighter-rouge">repartition</code>을 호출한 후 직접 정렬하는 것보다 성능이 더 좋음</ul><h3 id="1354-사용자-정의-파티셔닝"><span class="mr-2">13.5.4 사용자 정의 파티셔닝</span><a href="#1354-사용자-정의-파티셔닝" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>RDD를 사용하는 가장 큰 이유 중 하나<ul><li>구조적 API에서는 사용자 정의 파티셔너를 사용할 수 없음.<li>저수준 API의 세부적인 구현 방식</ul><li>데이터 치우짐 문제를 피하고자 클러스터 전체에 데이터를 균등하게 분배하는 목적으로 사용될 수 있음.<li>구조적 API로 RDD를 얻고, 사용자 정의 파티셔너를 적용한 뒤 다시 DataFrame 또는 Dataset으로 변환하여 사용<li>구조적 API와 RDD 장점을 모두 활용 가능<li>Partitioner를 확장한 클래스를 직접 구현해야 하므로 문제에 대한 업무 지식을 충분히 가진 경우에만 사용<ul><li>단일 값이나 다수 값(다수 컬럼)을 파티셔닝해야 한다면 DataFrame API를 사용하는 것이 좋음.</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">df</span> <span class="k">=</span> <span class="nv">spark</span><span class="o">.</span><span class="py">read</span>
+	<span class="o">.</span><span class="py">option</span><span class="o">(</span><span class="s">"header"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">option</span><span class="o">(</span><span class="s">"inferSchema"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">csv</span><span class="o">(</span><span class="s">"/data/retail-data/all/"</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="nv">rdd</span> <span class="k">=</span> <span class="nv">df</span><span class="o">.</span><span class="py">coalesce</span><span class="o">(</span><span class="mi">10</span><span class="o">).</span><span class="py">rdd</span>
+</pre></table></code></div></div><h4 id="hashpartitioner-rangepartitoner"><span class="mr-2">HashPartitioner, RangePartitoner</span><a href="#hashpartitioner-rangepartitoner" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>RDD API에서만 사용할 수 있는 내장형<li>이산형과 연속형 값을 다룰 때 사용</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre><span class="k">import</span> <span class="nn">org.apache.spark.HashPartitioner</span>
+
+<span class="n">rdd</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">r</span> <span class="k">=&gt;</span> <span class="nf">r</span><span class="o">(</span><span class="mi">6</span><span class="o">))</span>
+	<span class="o">.</span><span class="py">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">foreach</span><span class="o">(</span><span class="n">println</span><span class="o">)</span>
+
+<span class="k">val</span> <span class="nv">keyedRDD</span> <span class="k">=</span> <span class="n">rdd</span>
+	<span class="o">.</span><span class="py">keyBy</span><span class="o">(</span><span class="n">row</span> <span class="k">=&gt;</span> <span class="nf">row</span><span class="o">(</span><span class="mi">6</span><span class="o">).</span><span class="py">asInstanceOf</span><span class="o">[</span><span class="kt">Int</span><span class="o">].</span><span class="py">toDouble</span><span class="o">)</span>
+
+<span class="n">keyedRDD</span>
+	<span class="o">.</span><span class="py">partitionBy</span><span class="o">(</span><span class="nf">newHashPartitioner</span><span class="o">(</span><span class="mi">10</span><span class="o">))</span>
+	<span class="o">.</span><span class="py">take</span><span class="o">(</span><span class="mi">10</span><span class="o">)</span>
+</pre></table></code></div></div><ul><li>이는 유용하지만 매우 기초적인 기능을 제공.<ul><li>매우 큰 데이터나 심각하게 치우친 키를 다뤄야 한다면 고급 파티셔닝 기능을 사용해야 함.</ul></ul><h4 id="키-치우침-현상"><span class="mr-2">키 치우침 현상</span><a href="#키-치우침-현상" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>특정 키가 다른 키들에 비해 아주 많은 데이터를 가지는 현상<li>병렬성을 개선하고 실행과정에서 OOM을 방지하기 위해서는 키를 최대한 분할해야 한다.</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre><td class="rouge-code"><pre><span class="nc">Class</span> <span class="nc">DomainPartitioner</span> <span class="k">extends</span> <span class="nc">Partitioner</span> <span class="o">{</span>
+	<span class="k">def</span> <span class="nf">numPartitions</span> <span class="k">=</span> <span class="mi">3</span>
+	<span class="k">def</span> <span class="nf">getPartition</span><span class="o">(</span><span class="n">key</span><span class="k">:</span> <span class="kt">Any</span><span class="o">)</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="o">{</span>
+		<span class="k">val</span> <span class="nv">customerld</span> <span class="k">=</span> <span class="nv">key</span><span class="o">.</span><span class="py">aslnstanceOf</span><span class="o">[</span><span class="kt">Double</span><span class="o">].</span><span class="py">tolnt</span>
+
+		<span class="nf">if</span> <span class="o">(</span><span class="n">customerld</span> <span class="o">==</span> <span class="mf">17850.0</span> <span class="o">||</span> <span class="n">customerld</span> <span class="o">==</span> <span class="mf">12583.0</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="mi">0</span>
+		<span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="k">new</span> <span class="nv">java</span><span class="o">.</span><span class="py">util</span><span class="o">.</span><span class="py">Random</span><span class="o">().</span><span class="py">nextlnt</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span> <span class="o">+</span> <span class="mi">1</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">keyedRDD</span>
+	<span class="o">.</span><span class="py">partitionBy</span><span class="o">(</span><span class="k">new</span> <span class="nc">DomainPartitioner</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="nv">_</span><span class="o">.</span><span class="py">_1</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">glom</span><span class="o">()</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="nv">_</span><span class="o">.</span><span class="py">toSet</span><span class="o">.</span><span class="py">toSeq</span><span class="o">.</span><span class="py">length</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">take</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span>
+</pre></table></code></div></div><ul><li>사용자 정의 키 분배 로직은 RDD 수준에서만 사용 가능.<ul><li>임의의 로직을 사용해 물리적인 방식으로 클러스터에 데이터를 분배하는 강력한 방법</ul></ul><h2 id="136-사용자-정의-직렬화"><span class="mr-2">13.6 사용자 정의 직렬화</span><a href="#136-사용자-정의-직렬화" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><h3 id="kryo-직렬화"><span class="mr-2">Kryo 직렬화</span><a href="#kryo-직렬화" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>병렬화 대상인 모든 객체나 함수는 직렬화할 수 있어야 한다.</ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre><span class="k">class</span> <span class="nc">SomeClass</span> <span class="k">extends</span> <span class="nc">Serializable</span> <span class="o">{</span>
+	<span class="k">var</span> <span class="n">someValue</span> <span class="k">=</span> <span class="mi">0</span>
+	<span class="k">def</span> <span class="nf">setSomeValue</span><span class="o">(</span><span class="n">i</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+		<span class="n">somevalue</span><span class="k">=</span> <span class="n">i</span>
+		<span class="k">this</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+
+<span class="nv">sc</span><span class="o">.</span><span class="py">parallelize</span><span class="o">(</span><span class="mi">1</span> <span class="n">to</span> <span class="mi">10</span><span class="o">)</span>
+	<span class="o">.</span><span class="py">map</span><span class="o">(</span><span class="n">num</span> <span class="k">=&gt;</span> <span class="k">new</span> <span class="nc">SomeClass</span><span class="o">().</span><span class="py">setSomeValue</span><span class="o">(</span><span class="n">num</span><span class="o">))</span>
+</pre></table></code></div></div><ul><li>기본 직렬화는 매우 느리다.<li>Kryo를 사용해 빠르게 객체를 직렬화 할 수 있다.<ul><li>Java 직렬화보다 10배 이상 성능이 좋음.<li>Job 초기화시 <code class="language-plaintext highlighter-rouge">spark.serializer=org.apache.Spark.Serializer.Kryo5erializer</code> 를 설정<li>Spark 2.0.0부터 단순 데이터타입, 배열, 문자열 데이터 타입의 RDD 셔플링시 내부적으로 Kryo Serializer 사용</ul></ul><div class="language-scala highlighter-rouge"><div class="code-header"> <span data-label-text="Scala"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre><span class="k">val</span> <span class="nv">conf</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">SparkConf</span><span class="o">()</span>
+	<span class="o">.</span><span class="py">setMaster</span><span class="o">(...)</span>
+	<span class="o">.</span><span class="py">setAppName</span><span class="o">(...)</span>
+
+<span class="nv">conf</span><span class="o">.</span><span class="py">registerKryoClasses</span><span class="o">(</span><span class="nc">Array</span><span class="o">(</span>
+	<span class="n">classOf</span><span class="o">[</span><span class="kt">MyClass1</span><span class="o">],</span>
+	<span class="n">classOf</span><span class="o">[</span><span class="kt">MyCIass2</span><span class="o">]</span>
+<span class="o">))</span>
+
+<span class="k">val</span> <span class="nv">sc</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">SparkContext</span><span class="o">(</span><span class="n">conf</span><span class="o">)</span>
+</pre></table></code></div></div><h2 id="reference"><span class="mr-2">Reference</span><a href="#reference" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li><a href="https://www.coupang.com/vp/products/164359777?itemId=471497435&amp;vendorItemId=4215695264&amp;src=1042503&amp;spec=10304982&amp;addtag=400&amp;ctag=164359777&amp;lptag=10304982I471497435&amp;itime=20221030164504&amp;pageType=PRODUCT&amp;pageValue=164359777&amp;wPcid=16589055075836517214634&amp;wRef=&amp;wTime=20221030164504&amp;redirect=landing&amp;gclid=Cj0KCQjwwfiaBhC7ARIsAGvcPe7kxytxjJU9Ylxpe5l8Jk9zhXhknDFceRzD80Zn6IzxUaF-RPn5OKAaAnGxEALw_wcB&amp;campaignid=18626086777&amp;adgroupid=">Spark 완벽 가이드</a></ul></div><div class="post-tail-wrapper text-muted"><div class="post-meta mb-3"> <i class="far fa-folder-open fa-fw mr-1"></i> <a href='/categories/devlog/'>DevLog</a>, <a href='/categories/spark/'>Spark</a></div><div class="post-tags"> <i class="fa fa-tags fa-fw mr-1"></i> <a href="/tags/spark/" class="post-tag no-text-decoration" >Spark</a></div><div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2"><div class="license-wrapper"> This post is licensed under <a href="https://creativecommons.org/licenses/by/4.0/"> CC BY 4.0 </a> by the author.</div><div class="share-wrapper"> <span class="share-label text-muted mr-1">Share</span> <span class="share-icons"> <a href="https://twitter.com/intent/tweet?text=[%EC%8A%A4%ED%8C%8C%ED%81%AC%20%EC%99%84%EB%B2%BD%20%EA%B0%80%EC%9D%B4%EB%93%9C]%2013.%20RDD%20%EA%B3%A0%EA%B8%89%20%EA%B0%9C%EB%85%90%20-%20Sungsu's%20Tech%20Blog&url=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fspark-guide-13%2F" data-toggle="tooltip" data-placement="top" title="Twitter" target="_blank" rel="noopener" aria-label="Twitter"> <i class="fa-fw fab fa-twitter"></i> </a> <a href="https://www.facebook.com/sharer/sharer.php?title=[%EC%8A%A4%ED%8C%8C%ED%81%AC%20%EC%99%84%EB%B2%BD%20%EA%B0%80%EC%9D%B4%EB%93%9C]%2013.%20RDD%20%EA%B3%A0%EA%B8%89%20%EA%B0%9C%EB%85%90%20-%20Sungsu's%20Tech%20Blog&u=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fspark-guide-13%2F" data-toggle="tooltip" data-placement="top" title="Facebook" target="_blank" rel="noopener" aria-label="Facebook"> <i class="fa-fw fab fa-facebook-square"></i> </a> <a href="https://t.me/share/url?url=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fspark-guide-13%2F&text=[%EC%8A%A4%ED%8C%8C%ED%81%AC%20%EC%99%84%EB%B2%BD%20%EA%B0%80%EC%9D%B4%EB%93%9C]%2013.%20RDD%20%EA%B3%A0%EA%B8%89%20%EA%B0%9C%EB%85%90%20-%20Sungsu's%20Tech%20Blog" data-toggle="tooltip" data-placement="top" title="Telegram" target="_blank" rel="noopener" aria-label="Telegram"> <i class="fa-fw fab fa-telegram"></i> </a> <i id="copy-link" class="fa-fw fas fa-link small" data-toggle="tooltip" data-placement="top" title="Copy link" data-title-succeed="Link copied successfully!"> </i> </span></div></div></div></div></div><div id="panel-wrapper" class="col-xl-3 pl-2 text-muted"><div class="access"><div id="access-lastmod" class="post"><div class="panel-heading">Recently Updated</div><ul class="post-content pl-0 pb-1 ml-1 mt-2"><li><a href="/posts/es-bible-4-3/">[엘라스틱서치 바이블] 4. 데이터 다루기 -3(ES Client 라이브러리)</a><li><a href="/posts/es-bible-4-2/">[엘라스틱서치 바이블] 4. 데이터 다루기 -2(집계)</a><li><a href="/posts/es-bible-2/">[엘라스틱서치 바이블] 2. 엘라스틱 서치 기본 동작과 구조</a><li><a href="/posts/es-bible-3-1/">[엘라스틱서치 바이블] 3. 인덱스 설계 - 1</a><li><a href="/posts/spark-guide-6/">[스파크 완벽 가이드] 6. 다양한 데이터 타입 다루기</a></ul></div><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/spark/">Spark</a> <a class="post-tag" href="/tags/infra/">Infra</a> <a class="post-tag" href="/tags/java/">Java</a> <a class="post-tag" href="/tags/kubernetes-in-action/">kubernetes-in-action</a> <a class="post-tag" href="/tags/kubernetes/">kubernetes</a> <a class="post-tag" href="/tags/elasticsearch/">Elasticsearch</a> <a class="post-tag" href="/tags/spring/">Spring</a> <a class="post-tag" href="/tags/algorithm/">Algorithm</a> <a class="post-tag" href="/tags/effective-java/">Effective Java</a> <a class="post-tag" href="/tags/hands-on-reactive-programming-in-spring-5/">Hands-On Reactive Programming in Spring 5</a></div></div></div><div id="toc-wrapper" class="pl-0 pr-4 mb-5"><div class="panel-heading pl-3 pt-2 mb-2">Contents</div><nav id="toc"></nav></div><script src="https://cdn.jsdelivr.net/npm/tocbot@4.20.1/dist/tocbot.min.js"></script></div></div><div class="row"><div id="tail-wrapper" class="col-12 col-lg-11 col-xl-9 pl-3 pr-3 pr-xl-4 mt-5"><div id="related-posts" class="mb-2 mb-sm-4"><h3 class="pt-2 mb-4 ml-1" data-toc-skip>Further Reading</h3><div class="card-deck mb-4"><div class="card"> <a href="/posts/spark-guide/"><div class="card-body"> <em class="small" data-ts="1666338360" data-df="ll" > Oct 21, 2022 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[스파크 완벽 가이드] 0. 스파크 시작하기</h3><div class="text-muted small"><p> 스파크 시작하기 곧 업무에서 스파크를 사용해야 해서 스파크를 재대로 공부해봐야겠다고 생각했다. 그래서 일단 local 환경에서 spark를 설치하고, 간단한 작업들을 해보려고 한다. 1. 스파크 설치 2020 m1 osx 를 기준으로 작성되었음을 알려드립니다. # java 설치 arch -arm64 brew install ope...</p></div></div></a></div><div class="card"> <a href="/posts/spark-guide-2/"><div class="card-body"> <em class="small" data-ts="1667029560" data-df="ll" > Oct 29, 2022 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[스파크 완벽 가이드] 2. 스파크 간단히 살펴보기</h3><div class="text-muted small"><p> [스파크 완벽 가이드] 2. 스파크 간단히 살펴보기 2.1 스파크의 기본 아키텍쳐 2.1.1 스파크 애플리케이션 driver 프로세스와 executor 프로세스로 구성됨. driver 프로세스는 zeppelin 같은 BI 툴이 될수도 있고, spring application같은것이 될수도 있음. 로컬 모드 위 그림과 같이 클러스터...</p></div></div></a></div><div class="card"> <a href="/posts/spark-guide-3/"><div class="card-body"> <em class="small" data-ts="1667037120" data-df="ll" > Oct 29, 2022 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[스파크 완벽 가이드] 3. 스파크 기능 둘러보기</h3><div class="text-muted small"><p> [스파크 완벽 가이드] 3. 스파크 기능 둘러보기 3.1 스파크의 기능 3.2 Dataset : 타입 안정성을 제공하는 구조적 API 자바와 스칼라의 정적 데이터 타입 코드를 지원하기 위해 고안된 구조적 API 이는 타입 안정성을 지원하고, 동적 타입 언어인 파이썬과 R에서는 사용할수 없음. case class Flight(DEST_...</p></div></div></a></div></div></div><div class="post-navigation d-flex justify-content-between"> <a href="/posts/spark-guide-12/" class="btn btn-outline-primary" prompt="Older"><p>[스파크 완벽 가이드] 12. RDD</p></a> <a href="/posts/spark-guide-14/" class="btn btn-outline-primary" prompt="Newer"><p>[스파크 완벽 가이드] 14. 분산형 공유 변수</p></a></div><div id="disqus_thread" class="pt-2 pb-2"><p class="text-center text-muted small">Comments powered by <a href="https://disqus.com/">Disqus</a>.</p></div><script type="text/javascript"> var disqus_config = function () { this.page.url = 'https://sungsu9022.github.io/posts/spark-guide-13/'; this.page.identifier = '/posts/spark-guide-13/'; }; /* Lazy loading */ var disqus_observer = new IntersectionObserver( function (entries) { if (entries[0].isIntersecting) { (function () { var d = document, s = d.createElement('script'); s.src = 'https://sungsu-parks-tech-blog.disqus.com/embed.js'; s.setAttribute('data-timestamp', +new Date()); (d.head || d.body).appendChild(s); })(); disqus_observer.disconnect(); } }, { threshold: [0] } ); disqus_observer.observe(document.querySelector('#disqus_thread')); /* Auto switch theme */ function reloadDisqus() { if (event.source === window && event.data && event.data.direction === ModeToggle.ID) { /* Disqus hasn't been loaded */ if (typeof DISQUS === 'undefined') { return; } if (document.readyState == 'complete') { DISQUS.reset({ reload: true, config: disqus_config }); } } } if (document.querySelector('.mode-toggle')) { window.addEventListener('message', reloadDisqus); } </script></div></div></div><div id="search-result-wrapper" class="d-flex justify-content-center unloaded"><div class="col-12 col-sm-11 post-content"><div id="search-hints"><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/spark/">Spark</a> <a class="post-tag" href="/tags/infra/">Infra</a> <a class="post-tag" href="/tags/java/">Java</a> <a class="post-tag" href="/tags/kubernetes-in-action/">kubernetes-in-action</a> <a class="post-tag" href="/tags/kubernetes/">kubernetes</a> <a class="post-tag" href="/tags/elasticsearch/">Elasticsearch</a> <a class="post-tag" href="/tags/spring/">Spring</a> <a class="post-tag" href="/tags/algorithm/">Algorithm</a> <a class="post-tag" href="/tags/effective-java/">Effective Java</a> <a class="post-tag" href="/tags/hands-on-reactive-programming-in-spring-5/">Hands-On Reactive Programming in Spring 5</a></div></div></div><div id="search-results" class="d-flex flex-wrap justify-content-center text-muted mt-3"></div></div></div></div><footer><div class="container pl-lg-4 pr-lg-4"><div class="d-flex justify-content-between align-items-center text-muted ml-md-3 mr-md-3"><div class="footer-left"><p class="mb-0"> © 2024 <a href="https://twitter.com/sungsu9022dev">sungsu9022</a>. <span data-toggle="tooltip" data-placement="top" title="Except where otherwise noted, the blog posts on this site are licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License by the author.">Some rights reserved.</span></p></div><div class="footer-right"><p class="mb-0">Powered by <a href="https://jekyllrb.com" target="_blank" rel="noopener">Jekyll</a> with <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> theme.</p></div></div></div></footer><div id="mask"></div><a id="back-to-top" href="#" aria-label="back-to-top" class="btn btn-lg btn-box-shadow" role="button"> <i class="fas fa-angle-up"></i> </a> <script src="https://cdn.jsdelivr.net/npm/simple-jekyll-search@1.10.0/dest/simple-jekyll-search.min.js"></script> <script> SimpleJekyllSearch({ searchInput: document.getElementById('search-input'), resultsContainer: document.getElementById('search-results'), json: '/assets/js/data/search.json', searchResultTemplate: '<div class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-lg-4 pr-lg-4 pl-xl-0 pr-xl-0"> <a href="{url}">{title}</a><div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1"> {categories} {tags}</div><p>{snippet}</p></div>', noResultsText: '<p class="mt-5">Oops! No result founds.</p>', templateMiddleware: function(prop, value, template) { if (prop === 'categories') { if (value === '') { return `${value}`; } else { return `<div class="mr-sm-4"><i class="far fa-folder fa-fw"></i>${value}</div>`; } } if (prop === 'tags') { if (value === '') { return `${value}`; } else { return `<div><i class="fa fa-tag fa-fw"></i>${value}</div>`; } } } }); </script> <script src="https://cdn.jsdelivr.net/combine/npm/magnific-popup@1/dist/jquery.magnific-popup.min.js,npm/lazysizes@5.3.2/lazysizes.min.js,npm/clipboard@2/dist/clipboard.min.js"></script> <script src="https://cdn.jsdelivr.net/combine/npm/dayjs@1/dayjs.min.js,npm/dayjs@1/locale/en.min.js,npm/dayjs@1/plugin/relativeTime.min.js,npm/dayjs@1/plugin/localizedFormat.min.js"></script> <script defer src="/assets/js/dist/post.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.bundle.min.js"></script> <script defer src="/unregister.js"></script> <script defer src="https://www.googletagmanager.com/gtag/js?id=UA-145894105-1"></script> <script> document.addEventListener("DOMContentLoaded", function(event) { window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-145894105-1'); }); </script>

@@ -1,0 +1,612 @@
+<!DOCTYPE html><html lang="en" ><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f7f7"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1b1e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="viewport" content="width=device-width, user-scalable=no initial-scale=1, shrink-to-fit=no, viewport-fit=cover" ><meta name="generator" content="Jekyll v4.3.3" /><meta property="og:title" content="[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함." /><meta name="author" content="sungsu park" /><meta property="og:locale" content="en" /><meta name="description" content="5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함. 파드가 다른 파드에게 제공하는 서비스를 사용하려면 다른 파드를 찾는 방법이 필요하다. 쿠버네티스에서는 서비스를 제공하는 서버의 정확한 IP 주소나 호스트 이름을 지정해 각 클라이언트 앱을 구성하는것과는 다른 방식이 필요하다." /><meta property="og:description" content="5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함. 파드가 다른 파드에게 제공하는 서비스를 사용하려면 다른 파드를 찾는 방법이 필요하다. 쿠버네티스에서는 서비스를 제공하는 서버의 정확한 IP 주소나 호스트 이름을 지정해 각 클라이언트 앱을 구성하는것과는 다른 방식이 필요하다." /><link rel="canonical" href="https://sungsu9022.github.io/posts/devlog-platform-kubernetes-in-action5/" /><meta property="og:url" content="https://sungsu9022.github.io/posts/devlog-platform-kubernetes-in-action5/" /><meta property="og:site_name" content="Sungsu’s Tech Blog" /><meta property="og:type" content="article" /><meta property="article:published_time" content="2020-08-16T17:34:00+09:00" /><meta name="twitter:card" content="summary" /><meta property="twitter:title" content="[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함." /><meta name="twitter:site" content="@sungsu9022dev" /><meta name="twitter:creator" content="@sungsu park" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"sungsu park"},"dateModified":"2020-08-16T17:34:00+09:00","datePublished":"2020-08-16T17:34:00+09:00","description":"5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함. 파드가 다른 파드에게 제공하는 서비스를 사용하려면 다른 파드를 찾는 방법이 필요하다. 쿠버네티스에서는 서비스를 제공하는 서버의 정확한 IP 주소나 호스트 이름을 지정해 각 클라이언트 앱을 구성하는것과는 다른 방식이 필요하다.","headline":"[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함.","mainEntityOfPage":{"@type":"WebPage","@id":"https://sungsu9022.github.io/posts/devlog-platform-kubernetes-in-action5/"},"url":"https://sungsu9022.github.io/posts/devlog-platform-kubernetes-in-action5/"}</script><title>[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함. | Sungsu's Tech Blog</title><link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png"><link rel="manifest" href="/assets/img/favicons/site.webmanifest"><link rel="shortcut icon" href="/assets/img/favicons/favicon.ico"><meta name="apple-mobile-web-app-title" content="Sungsu's Tech Blog"><meta name="application-name" content="Sungsu's Tech Blog"><meta name="msapplication-TileColor" content="#da532c"><meta name="msapplication-config" content="/assets/img/favicons/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.googleapis.com" ><link rel="dns-prefetch" href="https://fonts.googleapis.com" ><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="dns-prefetch" href="https://fonts.gstatic.com" crossorigin><link rel="preconnect" href="https://fonts.googleapis.com" ><link rel="dns-prefetch" href="https://fonts.googleapis.com" ><link rel="preconnect" href="https://cdn.jsdelivr.net" ><link rel="dns-prefetch" href="https://cdn.jsdelivr.net" ><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&family=Source+Sans+Pro:wght@400;600;700;900&display=swap"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="use-credentials"><link rel="dns-prefetch" href="https://www.google-analytics.com"><link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.googletagmanager.com"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.11.2/css/all.min.css"><link rel="stylesheet" href="/assets/css/style.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tocbot@4.20.1/dist/tocbot.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/magnific-popup@1/dist/magnific-popup.min.css"> <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script> <script type="text/javascript"> class ModeToggle { static get MODE_KEY() { return "mode"; } static get MODE_ATTR() { return "data-mode"; } static get DARK_MODE() { return "dark"; } static get LIGHT_MODE() { return "light"; } static get ID() { return "mode-toggle"; } constructor() { if (this.hasMode) { if (this.isDarkMode) { if (!this.isSysDarkPrefer) { this.setDark(); } } else { if (this.isSysDarkPrefer) { this.setLight(); } } } let self = this; /* always follow the system prefers */ this.sysDarkPrefers.addEventListener('change', () => { if (self.hasMode) { if (self.isDarkMode) { if (!self.isSysDarkPrefer) { self.setDark(); } } else { if (self.isSysDarkPrefer) { self.setLight(); } } self.clearMode(); } self.notify(); }); } /* constructor() */ get sysDarkPrefers() { return window.matchMedia("(prefers-color-scheme: dark)"); } get isSysDarkPrefer() { return this.sysDarkPrefers.matches; } get isDarkMode() { return this.mode === ModeToggle.DARK_MODE; } get isLightMode() { return this.mode === ModeToggle.LIGHT_MODE; } get hasMode() { return this.mode != null; } get mode() { return sessionStorage.getItem(ModeToggle.MODE_KEY); } /* get the current mode on screen */ get modeStatus() { if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer)) { return ModeToggle.DARK_MODE; } else { return ModeToggle.LIGHT_MODE; } } setDark() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.DARK_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); } setLight() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.LIGHT_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); } clearMode() { $('html').removeAttr(ModeToggle.MODE_ATTR); sessionStorage.removeItem(ModeToggle.MODE_KEY); } /* Notify another plugins that the theme mode has changed */ notify() { window.postMessage({ direction: ModeToggle.ID, message: this.modeStatus }, "*"); } flipMode() { if (this.hasMode) { if (this.isSysDarkPrefer) { if (this.isLightMode) { this.clearMode(); } else { this.setLight(); } } else { if (this.isDarkMode) { this.clearMode(); } else { this.setDark(); } } } else { if (this.isSysDarkPrefer) { this.setLight(); } else { this.setDark(); } } this.notify(); } /* flipMode() */ } /* ModeToggle */ const modeToggle = new ModeToggle(); </script><body data-topbar-visible="true"><div id="sidebar" class="d-flex flex-column align-items-end"><div class="profile-wrapper text-center"><div id="avatar"> <a href="/" class="mx-auto"> <img src="/assets/img/personal/sunny.jpg" alt="avatar" onerror="this.style.display='none'"> </a></div><div class="site-title"> <a href="/">Sungsu's Tech Blog</a></div><div class="site-subtitle font-italic">Java/Kotlin Spring, Back-end</div></div><ul class="w-100"><li class="nav-item"> <a href="/" class="nav-link"> <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i> <span>HOME</span> </a><li class="nav-item"> <a href="/categories/" class="nav-link"> <i class="fa-fw fas fa-stream ml-xl-3 mr-xl-3 unloaded"></i> <span>CATEGORIES</span> </a><li class="nav-item"> <a href="/tags/" class="nav-link"> <i class="fa-fw fas fa-tag ml-xl-3 mr-xl-3 unloaded"></i> <span>TAGS</span> </a><li class="nav-item"> <a href="/archives/" class="nav-link"> <i class="fa-fw fas fa-archive ml-xl-3 mr-xl-3 unloaded"></i> <span>ARCHIVES</span> </a><li class="nav-item"> <a href="/about/" class="nav-link"> <i class="fa-fw fas fa-info-circle ml-xl-3 mr-xl-3 unloaded"></i> <span>ABOUT</span> </a></ul><div class="sidebar-bottom mt-auto d-flex flex-wrap justify-content-center align-items-center"> <button class="mode-toggle btn" aria-label="Switch Mode"> <i class="fas fa-adjust"></i> </button> <span class="icon-border"></span> <a href="https://github.com/sungsu9022" aria-label="github" target="_blank" rel="noopener noreferrer"> <i class="fab fa-github"></i> </a> <a href="https://twitter.com/sungsu9022dev" aria-label="twitter" target="_blank" rel="noopener noreferrer"> <i class="fab fa-twitter"></i> </a> <a href="javascript:location.href = 'mailto:' + ['sungsu9022','naver.com'].join('@')" aria-label="email" > <i class="fas fa-envelope"></i> </a> <a href="/feed.xml" aria-label="rss" > <i class="fas fa-rss"></i> </a></div></div><div id="topbar-wrapper"><div id="topbar" class="container d-flex align-items-center justify-content-between h-100 pl-3 pr-3 pl-md-4 pr-md-4"> <span id="breadcrumb"> <span> <a href="/"> Home </a> </span> <span>[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함.</span> </span> <i id="sidebar-trigger" class="fas fa-bars fa-fw"></i><div id="topbar-title"> Post</div><i id="search-trigger" class="fas fa-search fa-fw"></i> <span id="search-wrapper" class="align-items-center"> <i class="fas fa-search fa-fw"></i> <input class="form-control" id="search-input" type="search" aria-label="search" autocomplete="off" placeholder="Search..."> </span> <span id="search-cancel" >Cancel</span></div></div><div id="main-wrapper" class="d-flex justify-content-center"><div id="main" class="container pl-xl-4 pr-xl-4"><div class="row"><div id="core-wrapper" class="col-12 col-lg-11 col-xl-9 pr-xl-4"><div class="post pl-1 pr-1 pl-md-2 pr-md-2"><h1 data-toc-skip>[kubernetes-in-action] 5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함.</h1><div class="post-meta text-muted"> <span> Posted <em class="" data-ts="1597566840" data-df="ll" data-toggle="tooltip" data-placement="bottom"> Aug 16, 2020 </em> </span><div class="d-flex justify-content-between"> <span> By <em> <a href=""></a> </em> </span><div> <span class="readtime" data-toggle="tooltip" data-placement="bottom" title="7985 words"> <em>44 min</em> read</span></div></div></div><div class="post-content"><h1 id="5-서비스--클라이언트가-파드를-검색하고-통신을-가능하게-함">5. 서비스 : 클라이언트가 파드를 검색하고 통신을 가능하게 함.</h1><blockquote><p>파드가 다른 파드에게 제공하는 서비스를 사용하려면 다른 파드를 찾는 방법이 필요하다. 쿠버네티스에서는 서비스를 제공하는 서버의 정확한 IP 주소나 호스트 이름을 지정해 각 클라이언트 앱을 구성하는것과는 다른 방식이 필요하다.</p></blockquote><h2 id="기존의-방식과-다른-방식이-필요한-이유"><span class="mr-2">기존의 방식과 다른 방식이 필요한 이유</span><a href="#기존의-방식과-다른-방식이-필요한-이유" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>쿠버네티스 파드는 일시적이고, 언제든 다른 노드로 이동될 수 있기 때문(클러스터 IP는 언제든 변경될수 있다.)<li>쿠버네티스는 노드에 파드를 스케줄링한 후 파드가 시작되기 바로 직전에 파드의 IP주소를 할당함. 따라서 클라이언트에서 특정 파드의 IP주소를 미리 알 수 없다.<li>오토 스케일링 등을 위해서는 여러 파드가 동일한 서비스로 제공할 수 있어야 하는데, 각 파드마다 고유한 IP주소가 있고, 클라이언트는 서비스를 지원하는 파드의 수와 IP에 상관없이 단일 IP주소로 모든 파드에 엑세스할수 있어야 한다.</ul><h2 id="51-서비스-소개"><span class="mr-2">5.1 서비스 소개</span><a href="#51-서비스-소개" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>쿠버네티스의 서비스는 동일한 서비스를 제공하는 파드 그룹에 지속적인 단일 접점을 만들어주는 리소스이다.</ul><h3 id="서비스-설명"><span class="mr-2">서비스 설명</span><a href="#서비스-설명" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스를 만들고 클러스터 외부에서 엑세스할 수 있도록 구성하면 외부 클라이언트가 파드에 연결할 수 있는 하나의 고정 IP가 노출<li>서비스가 관리하는 파드들의 IP가 변경되더라도 서비스의 IP주소는 변경되지 않는다.<li>내부 클라이언트와 외부 클라이언트 모두 서비스로 파드에 접속</ul><p><a href="https://user-images.githubusercontent.com/6982740/89711371-e363b000-d9c4-11ea-9cbe-4c75809e6e7f.png" class="popup img-link "><img width="616" alt="스크린샷 2020-08-08 오후 10 16 46" data-src="https://user-images.githubusercontent.com/6982740/89711371-e363b000-d9c4-11ea-9cbe-4c75809e6e7f.png" class="lazyload" data-proofer-ignore></a></p><h3 id="511-서비스-생성"><span class="mr-2">5.1.1 서비스 생성</span><a href="#511-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스를 지원하는 파드가 한개 혹은 그 이상일 수 있다.<li>서비스 연결은 뒷단의 모든 파드로 로드밸런싱된다.<li>서비스에서도 레플리카셋과 동일하게 레이블 셀렉터 매커니즘을 그대로 적용된다.</ul><p><a href="https://user-images.githubusercontent.com/6982740/89711417-24f45b00-d9c5-11ea-96ad-9472313548e8.png" class="popup img-link "><img width="618" alt="스크린샷 2020-08-08 오후 10 18 48" data-src="https://user-images.githubusercontent.com/6982740/89711417-24f45b00-d9c5-11ea-96ad-9472313548e8.png" class="lazyload" data-proofer-ignore></a></p><h4 id="kubectl-expose"><span class="mr-2">kubectl expose</span><a href="#kubectl-expose" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>서비스를 생성하기 가장 쉬운 방법은 kubectl expose 명령어를 사용하는 것이다.<li>expose 명령어를 사용하는 것 대신 kubernetes 명령어를 이용해 서비스 리소스를 생성할 수도 있다.</ul><h4 id="yaml-디스크립터를-통한-서비스-생성"><span class="mr-2">YAML 디스크립터를 통한 서비스 생성</span><a href="#yaml-디스크립터를-통한-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre>apiVersion: v1
+kind: Service
+metadata:
+  name: kubia
+spec:
+  ports:
+  - port: 80                   <span class="c"># 서비스가 사용할 포트</span>
+    targetPort: 8080     <span class="c"># 서비스가 포워드할 컨테이너 포트</span>
+  selector:
+    app: kubia                <span class="c"># app=kubia 레이블이 있는 모든 파드가 이 서비스에 포함된다는것을 의미</span>
+</pre></table></code></div></div><h4 id="새-서비스-검사하기"><span class="mr-2">새 서비스 검사하기</span><a href="#새-서비스-검사하기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="c"># 서비스 생성</span>
+kubectl create <span class="nt">-f</span> kubia-svc.yaml
+
+<span class="c"># 서비스 정보 조회 ( 내부 클러스터 IP가 할당되었는지 확인 )</span>
+kubectl get svc
+</pre></table></code></div></div><ul><li>이렇게 클러스터 IP가 할당되면 클러스터 내부에서는 바로 엑세스할 수 있다.</ul><h4 id="실행인-컨테이너에-원격으로-명령어-실행"><span class="mr-2">실행인 컨테이너에 원격으로 명령어 실행</span><a href="#실행인-컨테이너에-원격으로-명령어-실행" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>kubectl exec 명령어를 사용하면 기존 파드의 컨테이너 내에서 원격으로 임의의 명령어를 실행할 수 있다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="c"># 특정 Pod에 접속하여 서비스의 클러스터 IP로 http 요청</span>
+kubectl <span class="nb">exec </span>kubia-4dkws <span class="nt">--</span> curl <span class="nt">-s</span> http://10.102.206.16
+
+<span class="c"># pod shell 접근</span>
+kubectl <span class="nb">exec</span> <span class="nt">--stdin</span> <span class="nt">--tty</span> kubia-4dkws <span class="nt">--</span> /bin/bash
+</pre></table></code></div></div><h5 id="더블-대시를-사용하는-이유"><span class="mr-2">더블 대시를 사용하는 이유</span><a href="#더블-대시를-사용하는-이유" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h5><ul><li>명령어의 더블 대시(–)는 kubectl 명령줄 옵션의 끝을 의미함.<li>더블 대시 뒤의 모든 것은 파드 내에서 실행돼야 하는 명령이다.<li><code class="language-plaintext highlighter-rouge">kubectl exec kubia-4dkws -- curl -s http://10.102.206.16</code> 의 예제에서 더블 대시가 없다면 -s 옵션은 kubectl exec의 옵션으로 해석하여 처리 되지 않는다.</ul><p><a href="https://user-images.githubusercontent.com/6982740/90332623-6904e280-dff9-11ea-908a-12e6f00ba2f2.png" class="popup img-link "><img width="702" alt="스크린샷 2020-08-16 오후 7 48 01" data-src="https://user-images.githubusercontent.com/6982740/90332623-6904e280-dff9-11ea-908a-12e6f00ba2f2.png" class="lazyload" data-proofer-ignore></a></p><h4 id="서비스의-세션-어피니티-구성"><span class="mr-2">서비스의 세션 어피니티 구성</span><a href="#서비스의-세션-어피니티-구성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>동일한 클라이언트에서 요청하더라도 서비스 프록시가 각 연결을 임의의 파드를 선택해서 연결을 다시 전달(forward)하기 때문에 요청할 때마다 다른 파드가 선택된다.<li>특정 클라이언트의 모든 요청을 매번 같은 파드로 리디렉션하려면 서비스의 세션 어피니티(sessionAffinity)속성을 기본값 None 대신 ClientIP로 설정하면 된다.<li>쿠버네티스에서는 None, ClientIP두 가지 유형의 서비스 세션 어피니티만 지원.<li>서비스 레벨에서는 HTTP 수준에서는 작동하지 않고 TPC / UDP 패킷을 처리하고 그들이 가지고 있는 payload는 신경쓰지 않는다.(쿠키 기반으로 할 수 없음)</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">sessionAffinity</span><span class="pi">:</span> <span class="s">ClientIP</span> <span class="c1"># 동일한 클라이언트 IP의 모든 요청을 동일한 파드로 전달</span>
+</pre></table></code></div></div><h4 id="동일한-서비스에서-여러-개의-포트-노출"><span class="mr-2">동일한 서비스에서 여러 개의 포트 노출</span><a href="#동일한-서비스에서-여러-개의-포트-노출" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드가 2개의 포트(http : 8080, https : 8443)을 수신한다면 하나의 서비스를 사용해 포트 80과 433을 파드의 포트 8080과 8443으로 전달할 수 있음.<li>하나의 서비스를 사용해 멀티 포트 서비스를 사용하면 단일 클러스터 IP로 모든 서비스 포트가 노출된다.</ul><h4 id="이름이-지정된-포트-사용"><span class="mr-2">이름이 지정된 포트 사용</span><a href="#이름이-지정된-포트-사용" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>포트 번호가 잘 알려진 경우가 아니더라도 서비스 스펙을 좀 더 명확히 할 수 있는 방법.<li>나중에 서비스 스펙을 변경하지 않고도 pod의 포트 번호를 변경할 수 있다는 큰 장점이 있음.</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre><td class="rouge-code"><pre><span class="c1"># 파드 정의에 포트 이름 사용</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="na">containerPort</span><span class="pi">:</span> <span class="m">8080</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">https</span>
+    <span class="na">containerPort</span><span class="pi">:</span> <span class="m">8443</span>
+
+<span class="c1"># 서비스에 이름이 지정된 포트 참조</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">http</span>       <span class="c1"># 포트 80은 컨테이너 포트의 이름이 http인 것에 매핑</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">https</span>
+    <span class="na">port</span><span class="pi">:</span> <span class="m">443</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">https</span>      <span class="c1"># 포트 443은 컨테이너 포트의 이름이 https인 것에 매핑</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">kubia</span>
+
+</pre></table></code></div></div><h3 id="512-서비스-검색"><span class="mr-2">5.1.2 서비스 검색</span><a href="#512-서비스-검색" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스의 파드는 생성되기도 하고 사라지기도 하고, 파드 IP가 변경되거나 파드 수는 늘어나거나 줄어들 수도 있다.<li>이러한 상황 속에서 항상 서비스의 IP주소로 엑세스할 수 있어야 한다.<li>쿠버네티스는 클라이언트 파드가 서비스의 IP와 포트를 검색할 수 있는 방법을 제공한다.</ul><h4 id="환경변수를-통한-서비스-검색"><span class="mr-2">환경변수를 통한 서비스 검색</span><a href="#환경변수를-통한-서비스-검색" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드가 시작되면 쿠버네티스는 해당 시점에 존재하는 각 서비스를 가리키는 환경변수 세트를 초기화한다.<li>환경변수 네이밍 규칙은 서비스 이름의 대시(-)는 밑줄(_)로 변환되고 서비스 이름이 환경변수 이름의 접두어로 쓰이면서 모든 문자는 대문자로 표시한다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>kubectl <span class="nb">exec </span>kubia-4dkws <span class="nb">env</span>
+
+<span class="c"># KUBIA_SERVICE_HOST=10.102.206.16     # 서비스 클러스터 IP</span>
+<span class="c"># KUBIA_PORT_80_TCP_PORT=80              # 서비스가 제공되는 포트</span>
+</pre></table></code></div></div><h4 id="dns를-통한-서비스-검색"><span class="mr-2">DNS를 통한 서비스 검색</span><a href="#dns를-통한-서비스-검색" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>kube-system 네임스페이스에 파드 중 kube-dns라는 게 있었다.<li>kube-dns는 DNS 서버를 실행하며 클러스터에서 실행중인 다른 모든 파드는 자동으로 이를 사용하도록 구성되는 파드이다.<li>파드에서 실행중인 프로세스에서 수행된 모든 DNS 쿼리는 시스템에서 실행중인 모든 서비스를 알고 있는 쿠버네티스의 자체 DNS 서버로 처리된다.<li>각 서비스는 내부 DNS 서버에서 항목을 가져오고 서비스 이름을 알고 있는 클라이언트 파드는 환경변수 대신 FQDN(정규화된 도메인 이름)으로 엑세스 할수 있다.</ul><h4 id="fqdn을-통한-서비스-연결"><span class="mr-2">FQDN을 통한 서비스 연결</span><a href="#fqdn을-통한-서비스-연결" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><blockquote><p>backend-database.default.svc.cluster.local “backend-database” -&gt; 서비스 이름 “default” -&gt; 네임스페이스 “svc.cluster.local” -&gt; 모든 클러스트의 로컬 서비스 이름에 사용되는 도메인 접미사</p></blockquote><ul><li>클라이언트는 여전히 서비스의 포트번호를 알아야 한다. 표준 포트가 아닌 경우 문제가 될수 있다.(환경변수에서 포트 번호를 얻을수 있어야 함)<li>접미사와 네임스페이스는 생략이 가능하다.<li>위 예제에서는 “backend-database” FQDN만으로 서비스에 엑세스할 수 있다.</ul><h4 id="파드의-컨테이너-내에서-셸-실행"><span class="mr-2">파드의 컨테이너 내에서 셸 실행</span><a href="#파드의-컨테이너-내에서-셸-실행" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드 컨테이너 내부의 DNS resolver가 구성되어 있기 때문에 네임스페이스와 접미사를 생략할 수 있다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre><span class="c"># 파드 컨테이너 냉서 셸 실행</span>
+kubectl <span class="nb">exec</span> <span class="nt">-it</span> kubia-4dkws bash
+
+<span class="c"># DNS resolver 확인</span>
+<span class="nb">cat</span> /etc/resolv.conf
+
+<span class="c"># FQDN을 통한 서비스 호출(모두 같은 결과)</span>
+curl http://kubia.default.svc.cluster.local
+curl http://kubia.default
+curl http://kubia
+</pre></table></code></div></div><h4 id="서비스-ip에-핑을-할-수-없는-이유"><span class="mr-2">서비스 IP에 핑을 할 수 없는 이유</span><a href="#서비스-ip에-핑을-할-수-없는-이유" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>서비스로 crul은 동작하지만 핑은 응답이 오지 않는다.<li>이는 서비스의 클르서트 IP가 가상 IP이므로 서비스 포트와 결합된 경우에만 의미가 있기 때문</ul><h2 id="52-클러스터-외부에-있는-서비스-연결"><span class="mr-2">5.2 클러스터 외부에 있는 서비스 연결</span><a href="#52-클러스터-외부에-있는-서비스-연결" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>클러스터에서 실행중인 파드는 내부 서비스에 연결하는 것처럼 외부 서비스에 연결할 수 있다.</ul><h3 id="521-서비스-엔드포인트-소개"><span class="mr-2">5.2.1 서비스 엔드포인트 소개</span><a href="#521-서비스-엔드포인트-소개" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스는 파드에 직접 연결(link)되지 않는다. 대신 엔드포인트 리소스가 그 사이에 있다.<li>파드 셀렉터는 서비스 스펙에 정의돼 있지만 들어오는 연결을 전달할 때 직접 사용하지 않고, IP와 포트 목록을 작성하는데 사용되며, 엔드포인트 리소스에 저장된다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="c"># service 정보 조회</span>
+kubectl describe svc kubia
+
+<span class="c"># kubia endpoints 조회</span>
+kubectl get endpoints kubia
+</pre></table></code></div></div><h3 id="522-서비스-엔드포인트-수동-구성"><span class="mr-2">5.2.2 서비스 엔드포인트 수동 구성</span><a href="#522-서비스-엔드포인트-수동-구성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스의 엔드포인트를 서비스와 분리하면 엔드포인트를 수동으로 구성하고 업데이트할수 있다.<li>수동으로 관리되는 엔드포인트를 사용해 서비스를 만들려면 서비스와 엔드포인트 리소스를 모두 만들어야 한다.</ul><h4 id="셀렉터-없이-서비스-생성"><span class="mr-2">셀렉터 없이 서비스 생성</span><a href="#셀렉터-없이-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">external-service</span>          <span class="c1"># 엔드포인트 오브젝트 이름과 일치해야 함.</span>
+<span class="na">spec</span><span class="pi">:</span>                                          <span class="c1"># spec에   selector를 정의하지 않음.</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><h4 id="셀렉터가-없는-서비스에-관한-엔드포인트-리소스-생성"><span class="mr-2">셀렉터가 없는 서비스에 관한 엔드포인트 리소스 생성</span><a href="#셀렉터가-없는-서비스에-관한-엔드포인트-리소스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>엔드포인트 오브젝트는 서비스 이름과 같아야 하고, 서비스를 제공하는 대상 IP주소와 포트 목록을 가져야 함.</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Endpoints</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">external-service</span>         <span class="c1"># 서비스 이름과 일치시킴.</span>
+<span class="na">subsets</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">addresses</span><span class="pi">:</span>                           <span class="c1"># 서비스가 연결을 전달할 엔드포인트 IP 생성</span>
+    <span class="pi">-</span> <span class="na">ip</span><span class="pi">:</span> <span class="s">11.11.11.11</span>
+    <span class="pi">-</span> <span class="na">ip</span><span class="pi">:</span> <span class="s">22.22.22.22</span>
+    <span class="na">ports</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>                              <span class="c1"># 엔드포인트의 대상 포트</span>
+</pre></table></code></div></div><p><a href="https://user-images.githubusercontent.com/6982740/90333286-8177fb80-dfff-11ea-81a4-86a2872095ed.png" class="popup img-link "><img width="572" alt="스크린샷 2020-08-16 오후 8 31 40" data-src="https://user-images.githubusercontent.com/6982740/90333286-8177fb80-dfff-11ea-81a4-86a2872095ed.png" class="lazyload" data-proofer-ignore></a></p><h4 id="외부-엔드포인트를-가지는-서비스를-만들어야-하는-목적"><span class="mr-2">외부 엔드포인트를 가지는 서비스를 만들어야 하는 목적</span><a href="#외부-엔드포인트를-가지는-서비스를-만들어야-하는-목적" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>나중에 외부 서비스를 쿠버네티스 내에서 실행되는 파드로 마이그레이션하기로 한 경우 서비스에 셀렉터를 추가해 엔드포인트를 자동으로 관리 할 수 있다.<li>이를 통해 서비스의 실제 구현이 변경되는 동안에도 서비스 IP 주소가 일정하게 유지될 수 있다.</ul><h3 id="523-외부-서비스를-위한-별칭-생성"><span class="mr-2">5.2.3 외부 서비스를 위한 별칭 생성</span><a href="#523-외부-서비스를-위한-별칭-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><h4 id="externalname-서비스-생성"><span class="mr-2">ExternalName 서비스 생성</span><a href="#externalname-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>외부 서비스의 별칭으로 하려는 경우 유형(type) 필드를 ExternalName으로 설정하면 된다.</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">external-service</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">ExternalName</span>                                     <span class="c1"># ExternalName 유형</span>
+  <span class="na">externalName</span><span class="pi">:</span> <span class="s">api.somecompany.com</span>      <span class="c1"># FQDN(Fully Qualified Domain Name) 이름 지정</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><ul><li>여기서 FQDN을 사용하는 대신 external-service.default.svc.clster.local 도메인 이름으로 외부 서비스에 연결할수도 있다.<li>ExternalName 서비스는 DNS 레벨에서만 구현된다.<li>서비스에 연결하는 클라이언트는 서비스 프록시를 완전히 무시하고 외부 서비스에 직접 연결된다.<li>이러한 이유로 Cluster IP를 얻을 수 없음.</ul><h2 id="53-외부-클라이언트에-서비스-노출"><span class="mr-2">5.3 외부 클라이언트에 서비스 노출</span><a href="#53-외부-클라이언트에-서비스-노출" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>쿠버네티스느 외부에서 서비스를 엑세스할 수 있는 방법을 몇가지 제공해준다.</ul><p><a href="https://user-images.githubusercontent.com/6982740/90333393-5510af00-e000-11ea-92ce-03a41d66bbf9.png" class="popup img-link "><img width="556" alt="스크린샷 2020-08-16 오후 8 37 34" data-src="https://user-images.githubusercontent.com/6982740/90333393-5510af00-e000-11ea-92ce-03a41d66bbf9.png" class="lazyload" data-proofer-ignore></a></p><h3 id="531-노트포트-서비스"><span class="mr-2">5.3.1 노트포트 서비스</span><a href="#531-노트포트-서비스" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스를 생성하고 유형을 노드포트로 설정하는 방법</ul><h4 id="노드포트-서비스-생성"><span class="mr-2">노드포트 서비스 생성</span><a href="#노드포트-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>nodePort를 생략할 경우 쿠버네티스가 임의의 포트를 선택한다.</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia-nodeport</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">NodePort</span>                     <span class="c1"># 노드포트 서비스 유형</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>                               <span class="c1"># 서비스 클러스터 IP 포트</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="m">8080</span>                 <span class="c1"># 서비스 대상 파드의 포트</span>
+    <span class="na">nodePort</span><span class="pi">:</span> <span class="m">30123</span>                 <span class="c1"># 각 클러스터 노드의 포트 30123을 통해 서비스에 엑세스 할수 있음.</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">kubia</span>
+</pre></table></code></div></div><h4 id="노드포트-서비스-확인"><span class="mr-2">노드포트 서비스 확인</span><a href="#노드포트-서비스-확인" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre><td class="rouge-code"><pre><span class="c"># 노드포트 서비스 생성</span>
+kubectl create <span class="nt">-f</span> kubia-svc-nodeport.yaml
+
+<span class="c"># 노드포트 서비스 확인</span>
+<span class="c"># kubectl get svc kubia-nodeport</span>
+
+<span class="c"># 노드 Ip 조회(minikube에서는 안됨)</span>
+kubectl get nodes <span class="nt">-o</span> <span class="nv">jsonpath</span><span class="o">=</span><span class="s1">'{.items[*].status.addresses[?(@.type=="ExternalIP")].address}'</span>
+
+<span class="c"># minikube nodeport service(노드포트 서비스를 로컬에서 접근 가능하도록 처리)</span>
+minikube service kubia-nodeport
+crul http://127.0.0.1:53446/
+
+|-----------|----------------|-------------|-------------------------|
+| NAMESPACE |      NAME      | TARGET PORT |           URL           |
+|-----------|----------------|-------------|-------------------------|
+| default   | kubia-nodeport |          80 | http://172.17.0.2:30123 |
+|-----------|----------------|-------------|-------------------------|
+🏃  Starting tunnel <span class="k">for </span>service kubia-nodeport.
+|-----------|----------------|-------------|------------------------|
+| NAMESPACE |      NAME      | TARGET PORT |          URL           |
+|-----------|----------------|-------------|------------------------|
+| default   | kubia-nodeport |             | http://127.0.0.1:53446 |
+|-----------|----------------|-------------|------------------------|
+</pre></table></code></div></div><p><a href="https://user-images.githubusercontent.com/6982740/90333485-10394800-e001-11ea-87ec-1c7d6e0559fa.png" class="popup img-link "><img width="609" alt="스크린샷 2020-08-16 오후 8 42 49" data-src="https://user-images.githubusercontent.com/6982740/90333485-10394800-e001-11ea-87ec-1c7d6e0559fa.png" class="lazyload" data-proofer-ignore></a></p><h4 id="노드포트-서비스의-단점"><span class="mr-2">노드포트 서비스의 단점</span><a href="#노드포트-서비스의-단점" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>클라이언트가 하나의 노드에만 요청하는 경우 노드에 장애가 발생할 경우 더 이상 서비스에 엑세스할 수 없으므로, 노드 앞에 로드밸런서를 배치하는 것이 좋다.</ul><h3 id="532-외부-로드밸런서로-서비스-노출"><span class="mr-2">5.3.2 외부 로드밸런서로 서비스 노출</span><a href="#532-외부-로드밸런서로-서비스-노출" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>쿠버네티스 클러스터는 로드밸런서를 자동으로 프로비저닝하는 기능을 제공한다.<li>쿠버네티스가 로드밸런서 서비스를 지원하지 않는 환경에서 실행중인 경우 로드밸런서는 프로비저닝되지는 않지만 서비스는 여전히 노드포트 서비스처럼 작동한다.</ul><h4 id="로드밸런서-서비스-생성"><span class="mr-2">로드밸런서 서비스 생성</span><a href="#로드밸런서-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia-loadbalancer</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">LoadBalancer</span>              <span class="c1"># 쿠버네티스 클러스터를 호스팅하는 인프라에서 로드밸런서를 얻을수 있다.</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="m">80</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="m">8080</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">kubia</span>
+</pre></table></code></div></div><h4 id="로드밸런서를-통한-서비스-연결"><span class="mr-2">로드밸런서를 통한 서비스 연결</span><a href="#로드밸런서를-통한-서비스-연결" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre><span class="c"># 로드밸런서 서비스 생성</span>
+kubectl create <span class="nt">-f</span> kubia-svc-loadbalancer.yaml
+
+<span class="c"># 확인</span>
+kubectl get svc kubia-loadbalancer
+</pre></table></code></div></div><p><a href="https://user-images.githubusercontent.com/6982740/90333732-17f9ec00-e003-11ea-88c5-41a070370f14.png" class="popup img-link "><img width="617" alt="스크린샷 2020-08-16 오후 8 57 20" data-src="https://user-images.githubusercontent.com/6982740/90333732-17f9ec00-e003-11ea-88c5-41a070370f14.png" class="lazyload" data-proofer-ignore></a></p><h4 id="세션-어피니티와-웹-브라우저"><span class="mr-2">세션 어피니티와 웹 브라우저</span><a href="#세션-어피니티와-웹-브라우저" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>웹 브라우저에서 세션 어피티니가 None이더라도 같은 파드로 계속 요청하는 현상을 볼수 있음.<li>그 이유는 브라우저의 http keep-alive header을 사용하기 때문이다.</ul><h3 id="533-외부-연결의-특성-이해"><span class="mr-2">5.3.3 외부 연결의 특성 이해</span><a href="#533-외부-연결의-특성-이해" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><h4 id="불필요한-네트워크-홉의-이해와-예방"><span class="mr-2">불필요한 네트워크 홉의 이해와 예방</span><a href="#불필요한-네트워크-홉의-이해와-예방" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>외부 클라이언트가 노드포트로 서비스에 요청할 경우 임의로 선택된 파드가 연결을 수신한 동일한 노드에서 실행중일 수도 있고, 그렇지 않을 수도 있다.<li>파드에 도달하려면 추가적인 네트워크 홉이 필요할 수 있으며 이것이 항상 바람직한 것은 아니다.<li>요청을 수신한 노드에서 실행중인 파드로만 외부 트래픽을 전달하도록 서비스를 구성해 추가 홉을 방지할 수 있는 옵션을 제공한다.</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre><span class="na">spec</span><span class="pi">:</span>
+   <span class="na">externalTrafficPolicy</span><span class="pi">:</span> <span class="s">Local</span>
+</pre></table></code></div></div><h4 id="externaltrafficpolicy을-이용할때-주의사항"><span class="mr-2">externalTrafficPolicy을 이용할때 주의사항</span><a href="#externaltrafficpolicy을-이용할때-주의사항" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>서비스 프록시는 로컬에 실행중인 파드를 선택하는데 로컬 파드가 업으면 요청을 중단시킨다.(로드밸런서는 파드가 하나 이상 있는 노드에만 연결을 전달하도록 해야 함)<li>모든 파드에 균등하게 분산되지 않을 수 있다.</ul><p><a href="https://user-images.githubusercontent.com/6982740/90333794-9c4c6f00-e003-11ea-88fc-6314f2e18726.png" class="popup img-link "><img width="451" alt="스크린샷 2020-08-16 오후 9 01 04" data-src="https://user-images.githubusercontent.com/6982740/90333794-9c4c6f00-e003-11ea-88fc-6314f2e18726.png" class="lazyload" data-proofer-ignore></a></p><h4 id="클라이언트-ip가-보존되지-않음-인식"><span class="mr-2">클라이언트 IP가 보존되지 않음 인식</span><a href="#클라이언트-ip가-보존되지-않음-인식" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>노드포트로 연결을 수신하면 패킷에서 소스 네트워크 주소 변환(SNAT)이 수행되므로 패킷의 소스 IP가 변경된다.<li>웹 서버의 경우 엑세스 로그에 브라우저의 IP를 표시할 수 없다는 것은 의미함..<li>로컬 외부 트래픽 정책(Local External Traffic Policy은 연결을 수신하는 노드와 대상 파드를 호스팅하는 노드 사이에 추가 홉이 없기 때문에 클라이언트 IP 보존에 영향을 미친다.</ul><h2 id="54-인그레스-리소스로-서비스-외부-노출"><span class="mr-2">5.4 인그레스 리소스로 서비스 외부 노출</span><a href="#54-인그레스-리소스로-서비스-외부-노출" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p><a href="https://user-images.githubusercontent.com/6982740/90333839-0b29c800-e004-11ea-8afd-0bcb04165574.png" class="popup img-link "><img width="617" alt="스크린샷 2020-08-16 오후 9 03 57" data-src="https://user-images.githubusercontent.com/6982740/90333839-0b29c800-e004-11ea-8afd-0bcb04165574.png" class="lazyload" data-proofer-ignore></a></p><h3 id="인그레스가-필요한-이유"><span class="mr-2">인그레스가 필요한 이유</span><a href="#인그레스가-필요한-이유" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>인그레스는 한 IP 주소로 수십 개의 서비스에 접근이 가능하도록 지원한다.<li>네트워크 스택의 애플리케이션 계층(HTTP)에서 작동하며, 서비스가 할 수 없는 쿠키 기반 세션 어피니티 등과 같은 기능 제공이 가능하다.</ul><h4 id="minikube에서-인그레스-애드온-활성화"><span class="mr-2">Minikube에서 인그레스 애드온 활성화</span><a href="#minikube에서-인그레스-애드온-활성화" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre><td class="rouge-code"><pre><span class="c"># minikube addons 확인</span>
+minikube addons list
+
+<span class="c"># ingress addons 활성화( minikube start --vm=true 로 시작해야 가능)</span>
+minikube addons <span class="nb">enable </span>ingress
+
+<span class="c"># 기존에 설치된 docker 기반 minikube delete</span>
+minikube delete
+
+<span class="c"># minikube vm 모드로 시작</span>
+minikube start <span class="nt">--vm</span><span class="o">=</span><span class="nb">true</span> <span class="nt">--driver</span><span class="o">=</span>hyperkit
+
+<span class="c"># 모든 네임스페이스 pods 조회</span>
+kubectl get po <span class="nt">--all-namespaces</span>
+</pre></table></code></div></div><h3 id="541-인그레스-리소스-생성"><span class="mr-2">5.4.1 인그레스 리소스 생성</span><a href="#541-인그레스-리소스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Ingress</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">rules</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">kubia.example.com</span>                       <span class="c1"># 인그레스는 kubia.example.com 도메인 이름으로 서비스에 매핑된다.</span>
+    <span class="na">http</span><span class="pi">:</span>
+      <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/</span>
+        <span class="na">backend</span><span class="pi">:</span>
+          <span class="na">serviceName</span><span class="pi">:</span> <span class="s">kubia-nodeport</span>          <span class="c1"># 모든 요청은 kubia-nodeport 서비스의 포트 80으로 전달된다.</span>
+          <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><h3 id="542-인그레스-서비스-엑세스"><span class="mr-2">5.4.2 인그레스 서비스 엑세스</span><a href="#542-인그레스-서비스-엑세스" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre><td class="rouge-code"><pre><span class="c"># ingress 리소스 생성</span>
+kubectl create <span class="nt">-f</span> kubia-ingress.yaml
+
+<span class="c"># ingresses 조회</span>
+kubectl get ingresses
+
+<span class="c"># host 설정</span>
+<span class="nb">sudo </span>vi etc/hosts
+192.168.64.2	kubia.example.com
+
+<span class="c"># 호출</span>
+curl http://kubia.example.com
+</pre></table></code></div></div><h4 id="인그레스-동작-방식"><span class="mr-2">인그레스 동작 방식</span><a href="#인그레스-동작-방식" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p><a href="https://user-images.githubusercontent.com/6982740/90334484-e2580180-e008-11ea-8be5-115b7310f360.png" class="popup img-link "><img width="699" alt="스크린샷 2020-08-16 오후 9 38 49" data-src="https://user-images.githubusercontent.com/6982740/90334484-e2580180-e008-11ea-8be5-115b7310f360.png" class="lazyload" data-proofer-ignore></a></p><h3 id="543-하나의-인그레스로-여러-서비스-노출"><span class="mr-2">5.4.3 하나의 인그레스로 여러 서비스 노출</span><a href="#543-하나의-인그레스로-여러-서비스-노출" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>규칙과 경로가 모두 배열이라 여러 항목을 가질 수 있다.<li>여러 호스트(host)와 경로(path)를 여러 서비스(backend.serviceName)에 매핑할 수 있다.</ul><h4 id="동일한-호스트의-다른-경로로-여러-서비스-매핑"><span class="mr-2">동일한 호스트의 다른 경로로 여러 서비스 매핑</span><a href="#동일한-호스트의-다른-경로로-여러-서비스-매핑" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre><td class="rouge-code"><pre>   <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">kubia.example.com</span>
+      <span class="s">http</span><span class="err">:</span>
+          <span class="na">paths</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/kubia</span>
+               <span class="s">backend</span><span class="err">:</span>                            <span class="c1"># kubia.example.com/kubia으로의 요청을 kubia 서비스로 라우팅된다.</span>
+                    <span class="na">serviceName</span><span class="pi">:</span> <span class="s">kubia</span>
+                    <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+            <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/bar</span>
+               <span class="s">backend</span><span class="err">:</span>                            <span class="c1"># kubia.example.com/bar으로의 요청을 bar 서비스로 라우팅된다.</span>
+                    <span class="na">serviceName</span><span class="pi">:</span> <span class="s">bar</span>
+                    <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><h4 id="서로-다른-호스트로-서로-다른-서비스-매핑하기"><span class="mr-2">서로 다른 호스트로 서로 다른 서비스 매핑하기</span><a href="#서로-다른-호스트로-서로-다른-서비스-매핑하기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre><td class="rouge-code"><pre><span class="na">spec</span><span class="pi">:</span>
+   <span class="na">rules</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">foo.example.com</span>
+       <span class="s">http</span><span class="err">:</span>
+          <span class="na">paths</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/</span>
+               <span class="s">backend</span><span class="err">:</span>                            <span class="c1"># foo.example.com으로의 요청을 foo 서비스로 라우팅된다.</span>
+                    <span class="na">serviceName</span><span class="pi">:</span> <span class="s">foo</span>
+                    <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+    <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">bar.example.com</span>
+       <span class="s">http</span><span class="err">:</span>
+          <span class="na">paths</span><span class="pi">:</span>
+            <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/</span>
+               <span class="s">backend</span><span class="err">:</span>                            <span class="c1"># bar.example.com으로의 요청을 bar서비스로 라우팅된다.</span>
+                    <span class="na">serviceName</span><span class="pi">:</span> <span class="s">bar</span>
+                    <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><h3 id="544-tls-트래픽을-처리하도록-인그레스-구성"><span class="mr-2">5.4.4 TLS 트래픽을 처리하도록 인그레스 구성</span><a href="#544-tls-트래픽을-처리하도록-인그레스-구성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><h4 id="인그레스를-위한-tls-인증서-생성"><span class="mr-2">인그레스를 위한 TLS 인증서 생성</span><a href="#인그레스를-위한-tls-인증서-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre><td class="rouge-code"><pre><span class="c"># 개인키 생성</span>
+openssl genrsa <span class="nt">-out</span> tls.key 2048
+
+<span class="c"># 인증서 생성</span>
+openssl req <span class="nt">-new</span> <span class="nt">-x509</span> <span class="nt">-key</span> tls.key <span class="nt">-out</span> tls.cert <span class="nt">-days</span> 360 <span class="nt">-subj</span> /CN<span class="o">=</span>kubia.example.com
+
+<span class="c"># 시크릿 리소스 생성</span>
+kubectl create secret tls tls-secret <span class="nt">--cert</span><span class="o">=</span>tls.cert <span class="nt">--key</span><span class="o">=</span>tls.key
+</pre></table></code></div></div><h4 id="certificatesigningrequest-리소스로-인증서-서명"><span class="mr-2">CertificateSigningRequest 리소스로 인증서 서명</span><a href="#certificatesigningrequest-리소스로-인증서-서명" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>인증서를 직접 서명하는 대신 CSR 리소스를 만들어 인증서에 서명할 수 있음.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>kubectl certificate approve &lt;name of th CSR&gt;
+</pre></table></code></div></div><h4 id="tls-트래픽을-처리하는-인그레스-생성"><span class="mr-2">tls 트래픽을 처리하는 인그레스 생성</span><a href="#tls-트래픽을-처리하는-인그레스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre><td class="rouge-code"><pre><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Ingress</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kubia-tls</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">tls</span><span class="pi">:</span>                                           <span class="c1"># TLS 구성</span>
+  <span class="pi">-</span> <span class="na">hosts</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">kubia.example.com</span>
+    <span class="na">secretName</span><span class="pi">:</span> <span class="s">tls-secret</span>       <span class="c1"># 개인키와 인증서는 위에서 생성한 tls-secret 참조</span>
+  <span class="na">rules</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">kubia.example.com</span>
+    <span class="na">http</span><span class="pi">:</span>
+      <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">path</span><span class="pi">:</span> <span class="s">/</span>
+        <span class="na">backend</span><span class="pi">:</span>
+          <span class="na">serviceName</span><span class="pi">:</span> <span class="s">kubia-nodeport</span>
+          <span class="na">servicePort</span><span class="pi">:</span> <span class="m">80</span>
+</pre></table></code></div></div><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre><span class="c"># https request 호출</span>
+curl <span class="nt">-k</span> <span class="nt">-v</span> https://kubia.example.com/kubia
+</pre></table></code></div></div><h2 id="55-레디니스-프로브--파드가-연결을-수락할-준비가-됐을-때-신호-보내기-"><span class="mr-2">5.5 레디니스 프로브 ( 파드가 연결을 수락할 준비가 됐을 때 신호 보내기 )</span><a href="#55-레디니스-프로브--파드가-연결을-수락할-준비가-됐을-때-신호-보내기-" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>파드는 구성에 시간이 걸릴 수 있다. 데이터를 로드하는 데 시간이 걸리거나, 첫번 째 사용자 요청이 너무 오래걸리거나 사용자 경험에 영향을 미치는 것을 방지하고자 준비 절차를 수행해야 할 수도 있다.</ul><h3 id="551-레디니스-프로브-소개"><span class="mr-2">5.5.1 레디니스 프로브 소개</span><a href="#551-레디니스-프로브-소개" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>라이브니스 프로브와 비슷하게 파드에 레디니스 프로브를 정의할 수 있다.<li>주기적으로 호출되며 특정 파드가 클라이언트 요청을 수신할 수 있는지를 결정한다.<li>애플리케이션 특성에 따라 상세한 레디니스 프로브를 작성하는 것은 개발자의 몫</ul><h4 id="레디니스-프로브-유형"><span class="mr-2">레디니스 프로브 유형</span><a href="#레디니스-프로브-유형" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>Exec 프로브 : 프로세스를 실행<li>HTTP GET 프로브 : HTTP GET 요청 수행<li>TCP 소켓 프로브 : 컨테이너에 TCP 연결 확인</ul><h4 id="레디니스-프로브의-동작"><span class="mr-2">레디니스 프로브의 동작</span><a href="#레디니스-프로브의-동작" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>컨테이너가 시작될 때 쿠버네티스는 첫 번째 레디니스 점검을 수행하기 전에 구성 가능한 시간이 경과하기를 기다릴 수 있도록 구성 가능<li>주기적으로 프로브를 호출하고 레디니스 프로브의 결과에 따라 작동<li>파드가 준비되지 않았다고 하면 서비스에서 제거하고, 파드가 준비되면 서비스에 다시 추가한다.<li>컨테이너가 준비 상태 점검에 실패하더라도 컨에티너가 종료되거나 다시 시작시키지 않는다.</ul><h4 id="라이브니스-프로브-vs-레디니스-프로브"><span class="mr-2">라이브니스 프로브 vs 레디니스 프로브</span><a href="#라이브니스-프로브-vs-레디니스-프로브" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>라이브니스 프로브는 상태가 좋지 않은 컨테이너를 제거하고 새롭고 건강한 컨테이너로 교체해 파드의 상태를 정상으로 유지시킨다.<li>레디니스 프로브는 요청을 처리할 준비가 된 파드의 컨테이너만 요청을 수신하도록 한다.(L7 health check와 유사)</ul><p><a href="https://user-images.githubusercontent.com/6982740/90334809-306e0480-e00b-11ea-9cd2-04189b331957.png" class="popup img-link "><img width="586" alt="스크린샷 2020-08-16 오후 9 55 14" data-src="https://user-images.githubusercontent.com/6982740/90334809-306e0480-e00b-11ea-9cd2-04189b331957.png" class="lazyload" data-proofer-ignore></a></p><h4 id="레디니스-프로브가-중요한-이유"><span class="mr-2">레디니스 프로브가 중요한 이유</span><a href="#레디니스-프로브가-중요한-이유" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드 그룹이 다른 파드에서 제공하는 서비스에 의존한다고 했을때(웹 앱 -&gt; 백엔드 데이터베이스) 웹 앱 파드중 하나만 DB에 연결할 수 없는 경우, 요청을 처리할 준비가 되지 않았다고 신호를 주는게 현명할 수 있다.<li>레디니스 프로브를 사용하면 클라이언트가 정상 상태인 파드하고만 통신할 수 있다.<li>그래서 시스템에 문제가 있다는 것을 절대 알아차리지 못한다.</ul><h3 id="552-파드에-레디니스-프로브-추가"><span class="mr-2">5.5.2 파드에 레디니스 프로브 추가</span><a href="#552-파드에-레디니스-프로브-추가" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+</pre><td class="rouge-code"><pre><span class="c"># replicaSet 수정</span>
+kubectl edit rs kubia
+
+
+<span class="c"># yaml</span>
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kubia
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+        - name: kubia
+          image: sungsu9022/kubia
+          ports:
+            - name: http
+              containerPort: 8080
+            readinessProbe:                      <span class="c"># 파드의 각 컨테이너에 레디니스 프로브를 정의</span>
+              <span class="nb">exec</span>:                                      <span class="c"># ls /var/ready 명령어를 주기적으로 수행하여 존재하면 0(성공), 그렇지 않으면 다른 값(실패)</span>
+                <span class="nb">command</span>:
+                  - <span class="nb">ls</span>
+                  - /var/ready
+</pre></table></code></div></div><ul><li>이렇게 하면 /var/ready 파일이 없으므로 READY에 준비된 컨테이너가 없다고 표시된다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre><td class="rouge-code"><pre><span class="c"># /var/ready 파일 생성</span>
+kubectl <span class="nb">exec </span>kubia-4wjqj <span class="nt">--</span> <span class="nb">touch</span> /var/ready
+
+<span class="c"># 확인(kubia-4wjqj 가 READY 1/1로 변경됨)</span>
+kubectl get pods
+
+<span class="c"># 레디니스 프로브 조회</span>
+kubectl describe pod kubia-4wjqj
+
+<span class="c"># 하나의 READY 파드로 서비스를 호출</span>
+curl http://kubia.example.com
+</pre></table></code></div></div><h3 id="553-실제-환경에서-레디니스-프로브가-수행해야-하는-기능"><span class="mr-2">5.5.3 실제 환경에서 레디니스 프로브가 수행해야 하는 기능</span><a href="#553-실제-환경에서-레디니스-프로브가-수행해야-하는-기능" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스에서 파드를 수동으로 추가하거나 제거하려면 파드와 서비스의 레이블 셀렉터에 enabled=true 레이블을 추가한다. 서비스에서 파드를 제거하려면 레이블을 제거하라.</ul><h4 id="레디니스-프로브를-항상-정의하라"><span class="mr-2">레디니스 프로브를 항상 정의하라</span><a href="#레디니스-프로브를-항상-정의하라" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드의 레디니스 프로브를 추가하지 않으면 파드가 시작하는 즉시 서비스 엔드포인트가 된다.<li>여전히 시작 단계로 수신 연결을 수락할 준비가 되지 않은 상태에서 파드로 전달된다.<li>따라서 클라이언트가 Connection Refused 유형의 에러를 보게 된다.<li>기본 URL에 HTTP 요청을 보내더라도 항상 레디니스 프로브를 정의해야 한다.</ul><h4 id="레디니스-프로브에-파드의-종료-코드를-포함하지-마라"><span class="mr-2">레디니스 프로브에 파드의 종료 코드를 포함하지 마라</span><a href="#레디니스-프로브에-파드의-종료-코드를-포함하지-마라" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><ul><li>파드가 종료할 때, 실행되는 앱은 종료 신호를 받자마자 연결 수단을 중단한다.<li>쿠버네티스는 파드를 삭제하자마자 모든 서비스에서 파드를 제거하기 때문에 굳이 별도로 이런 처리를 할 필요가 없다.</ul><h2 id="56-헤드리스-서비스로-개별-파드-찾기"><span class="mr-2">5.6. 헤드리스 서비스로 개별 파드 찾기</span><a href="#56-헤드리스-서비스로-개별-파드-찾기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>클라이언트가 모든 파드에 연결해야 하는 경우 어떻게 할수 있을까? 파드가 다른 파드에 각각 연결해야 하는 경우 어떻게 해야 할까?<li>클라이언트가 모든 파드에 연결하려면 각 파드의 IP를 알아야 한다.<li>쿠버네티스는 클라이언트가 DNS 조회로 파드 IP를 찾을 수 있도록 한다.<li>쿠버네티스 서비스에 클러스터 IP가 필요하지 않다면 ClusterIP 필드를 None으로 설정하여 DNS 서버는 하나의 서비스 IP 대신 파드 IP 목록들을 반환한다.<li>이때 각 레코는 현재시점 기준으로 서비스를 지원하는 개별 파드의 IP를 가리킨다.<li>따라서 클라이언트는 간단한 DNS A 레코드 조회를 수행하고 서비스에 포함된 모든 파드의 IP를 얻을 수 있다.</ul><h3 id="561-헤드리스-서비스-생성"><span class="mr-2">5.6.1 헤드리스 서비스 생성</span><a href="#561-헤드리스-서비스-생성" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>서비스 스펙의 clusterIP필드를 None으로 설정하면 클라이언트가 서비스의 파드에 연결할 수 있는 클러스터 IP를 할당하지 않기 떄문에 서비스가 헤드리스 상태가 된다.<li>클러스터 Ip가 없고 엔드포인트에 파드 셀렉터와 일치하는 파드가 포함돼 있음을 확인할 수 있다.</ul><pre><code class="language-yarml">apiVersion: v1
+kind: Service
+metadata:
+  name: kubia-headless
+spec:
+  clusterIP: None                     # 헤드리스 서비스로 만드는 spec 옵션
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: kubia
+</code></pre><h3 id="562-dns로-파드-찾기"><span class="mr-2">5.6.2 DNS로 파드 찾기</span><a href="#562-dns로-파드-찾기" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>실제로 클라이언트 관점에서는 헤드리스 서비스를 사용하나 일반 서비시를 사용하나 관계 없이 서비스의 DNS 이름에 연결해 파드에 연결할 수 있다.<li>차이점이 있다면 헤드리스 서비스의 경우 클라이언트는 서비스 프록시 대신 파드에 직접 연결한다.<li>헤드리스 서비스는 여전히 파드간에 로드밸런싱을 제공하지만 서비스 프록시 대신 DNS 라운드 로빈 매커니즘으로 처리된다.</ul><div class="language-sh highlighter-rouge"><div class="code-header"> <span data-label-text="Shell"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre><td class="rouge-code"><pre><span class="c"># dnsutils pod 생성</span>
+kubectl run dnsutils <span class="nt">--image</span><span class="o">=</span>tutum/dnsutils <span class="nt">--generator</span><span class="o">=</span>run-pod/v1 <span class="nt">--command</span> <span class="nt">--</span> <span class="nb">sleep </span>infinity
+
+<span class="c"># 헤드리스 서비스를 위해 반환된 DNS A 레코드( 레코드 목록이 표시된다. )</span>
+kubectl <span class="nb">exec </span>dnsutils nslookup kubia-headless
+
+<span class="c"># 일반 서비스 nslookup ( 클러스터 IP가 표시된다. )</span>
+kubectl <span class="nb">exec </span>dnsutils nslookup kubia
+</pre></table></code></div></div><h3 id="563-모든-파드-검색---준비되지-않은-파드도-포함"><span class="mr-2">5.6.3 모든 파드 검색 - 준비되지 않은 파드도 포함</span><a href="#563-모든-파드-검색---준비되지-않은-파드도-포함" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><ul><li>쿠버네티스가 파드의 레디니스 상태에 관계 없이 모든 파드를 서비스에 추가되게 하려면 서비스에 다음 어노테이션을 추가해야 한다.<li>tolerate-unready-endpoints는 deprecated되었고, publishNotReadyAddresses를 사용해서 동일한 기능을 처리할 수 있다.( https://github.com/kubedb/project/issues/242 )</ul><div class="language-yaml highlighter-rouge"><div class="code-header"> <span data-label-text="YAML"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre><td class="rouge-code"><pre><span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="c1">#metadata:</span>
+<span class="c1">#  annotations:</span>
+<span class="c1">#      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"</span>
+<span class="s">spec</span>
+   <span class="s">publishNotReadyAddresses</span><span class="err">:</span> <span class="kc">true</span>
+
+</pre></table></code></div></div><h2 id="57-서비스-문제-해결-faq"><span class="mr-2">5.7 서비스 문제 해결 FAQ</span><a href="#57-서비스-문제-해결-faq" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><blockquote><p>서비스로 파드에 엑세스할 수 없는 경우 다음 내용을 확인해보면 도움이 된다.</p><ul><li>외부가 아닌 클러스터 내에서 서비스의 클러스터 IP에 연결되는지 확인<li>서비스에 엑세스할 수 있는지 확인하려고 서비스 IP로 핑을 하는 케이스(핑 동작 안함)<li>레디니스 프로브를 정의했다면 성공했는지 확인하라, pod의 READY 여부 확인<li>파드가 서비스의 일부인지 확인하려면 kubectl get endpoints를 사용해 해당 엔드포인트 오브젝트를 확인하라.<li>FQDN이나 그 일부로 서비스에 엑세스하려고 하는데 작동하지 않는 경우 FQDN 대신 클러스터 IP를 사용해 엑세스할수 있는지 확인하라<li>대상 포트가 아닌 서비스로 노출된 포트에 연결하고 있는지 확인하라<li>파드 IP에 직접 연결해 파드가 올바른 포틍 연결돼있는지 확인하라<li>앱이 로컬호스트에만 바인딩하고 있는지 확인하라.</ul></blockquote><h2 id="58-요약"><span class="mr-2">5.8 요약</span><a href="#58-요약" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li>서비스는 안정된 단일 IP 주소와 포트로 특정 레이블 셀렉터와 일치하는 여러 개의 파드를 노출<li>기본적으로 클러스터 내부에서 서비스에 엑세스할 수 있지만 유형을 노드포트 또는 로드밸런서로 설정해 클러스터 외부에서 서비스에 엑세스할 수 있다.<li>파드는 환경변수를 검색해 IP 주소와 포트로 서비스를 검색 할수 있다.<li>엔드포인트 리소스를 만드는 대신 셀렉터 설정 없이 서비스 리소스를 생성해 클러스터 외부에 있는 서비스를 검색하고 통신할 수 있다.<li>ExternalName 서비스 유형으로 외부 서비스에 대한 DNS CNAME(별칭)을 제공할 수 있다.<li>단일 인그레스로 여러 HTTP 서비스를 노출할 수 있다.<li>파드 컨테이너의 레디니스 프로브는 파드를 서비스 엔드포인트에 포함해야 하는지 여부를 결정한다.<li>헤드리스 서비스를 생성하면 DNS로 파드 IP를 검색할 수 있다.</ul><h2 id="reference"><span class="mr-2">Reference</span><a href="#reference" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><ul><li><a href="https://www.manning.com/books/kubernetes-in-action">kubernetes-in-action</a><li><a href="https://kubernetes.io/ko/docs/home/">kubernetes.io</a></ul></div><div class="post-tail-wrapper text-muted"><div class="post-meta mb-3"> <i class="far fa-folder-open fa-fw mr-1"></i> <a href='/categories/devlog/'>DevLog</a>, <a href='/categories/kubernetes/'>kubernetes</a></div><div class="post-tags"> <i class="fa fa-tags fa-fw mr-1"></i> <a href="/tags/infra/" class="post-tag no-text-decoration" >Infra</a> <a href="/tags/kubernetes/" class="post-tag no-text-decoration" >kubernetes</a> <a href="/tags/kubernetes-in-action/" class="post-tag no-text-decoration" >kubernetes-in-action</a></div><div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2"><div class="license-wrapper"> This post is licensed under <a href="https://creativecommons.org/licenses/by/4.0/"> CC BY 4.0 </a> by the author.</div><div class="share-wrapper"> <span class="share-label text-muted mr-1">Share</span> <span class="share-icons"> <a href="https://twitter.com/intent/tweet?text=[kubernetes-in-action]%205.%20%EC%84%9C%EB%B9%84%EC%8A%A4%20:%20%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8%EA%B0%80%20%ED%8C%8C%EB%93%9C%EB%A5%BC%20%EA%B2%80%EC%83%89%ED%95%98%EA%B3%A0%20%ED%86%B5%EC%8B%A0%EC%9D%84%20%EA%B0%80%EB%8A%A5%ED%95%98%EA%B2%8C%20%ED%95%A8.%20-%20Sungsu's%20Tech%20Blog&url=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fdevlog-platform-kubernetes-in-action5%2F" data-toggle="tooltip" data-placement="top" title="Twitter" target="_blank" rel="noopener" aria-label="Twitter"> <i class="fa-fw fab fa-twitter"></i> </a> <a href="https://www.facebook.com/sharer/sharer.php?title=[kubernetes-in-action]%205.%20%EC%84%9C%EB%B9%84%EC%8A%A4%20:%20%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8%EA%B0%80%20%ED%8C%8C%EB%93%9C%EB%A5%BC%20%EA%B2%80%EC%83%89%ED%95%98%EA%B3%A0%20%ED%86%B5%EC%8B%A0%EC%9D%84%20%EA%B0%80%EB%8A%A5%ED%95%98%EA%B2%8C%20%ED%95%A8.%20-%20Sungsu's%20Tech%20Blog&u=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fdevlog-platform-kubernetes-in-action5%2F" data-toggle="tooltip" data-placement="top" title="Facebook" target="_blank" rel="noopener" aria-label="Facebook"> <i class="fa-fw fab fa-facebook-square"></i> </a> <a href="https://t.me/share/url?url=https%3A%2F%2Fsungsu9022.github.io%2Fposts%2Fdevlog-platform-kubernetes-in-action5%2F&text=[kubernetes-in-action]%205.%20%EC%84%9C%EB%B9%84%EC%8A%A4%20:%20%ED%81%B4%EB%9D%BC%EC%9D%B4%EC%96%B8%ED%8A%B8%EA%B0%80%20%ED%8C%8C%EB%93%9C%EB%A5%BC%20%EA%B2%80%EC%83%89%ED%95%98%EA%B3%A0%20%ED%86%B5%EC%8B%A0%EC%9D%84%20%EA%B0%80%EB%8A%A5%ED%95%98%EA%B2%8C%20%ED%95%A8.%20-%20Sungsu's%20Tech%20Blog" data-toggle="tooltip" data-placement="top" title="Telegram" target="_blank" rel="noopener" aria-label="Telegram"> <i class="fa-fw fab fa-telegram"></i> </a> <i id="copy-link" class="fa-fw fas fa-link small" data-toggle="tooltip" data-placement="top" title="Copy link" data-title-succeed="Link copied successfully!"> </i> </span></div></div></div></div></div><div id="panel-wrapper" class="col-xl-3 pl-2 text-muted"><div class="access"><div id="access-lastmod" class="post"><div class="panel-heading">Recently Updated</div><ul class="post-content pl-0 pb-1 ml-1 mt-2"><li><a href="/posts/es-bible-4-3/">[엘라스틱서치 바이블] 4. 데이터 다루기 -3(ES Client 라이브러리)</a><li><a href="/posts/es-bible-4-2/">[엘라스틱서치 바이블] 4. 데이터 다루기 -2(집계)</a><li><a href="/posts/es-bible-2/">[엘라스틱서치 바이블] 2. 엘라스틱 서치 기본 동작과 구조</a><li><a href="/posts/es-bible-3-1/">[엘라스틱서치 바이블] 3. 인덱스 설계 - 1</a><li><a href="/posts/spark-guide-6/">[스파크 완벽 가이드] 6. 다양한 데이터 타입 다루기</a></ul></div><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/spark/">Spark</a> <a class="post-tag" href="/tags/infra/">Infra</a> <a class="post-tag" href="/tags/java/">Java</a> <a class="post-tag" href="/tags/kubernetes-in-action/">kubernetes-in-action</a> <a class="post-tag" href="/tags/kubernetes/">kubernetes</a> <a class="post-tag" href="/tags/elasticsearch/">Elasticsearch</a> <a class="post-tag" href="/tags/spring/">Spring</a> <a class="post-tag" href="/tags/algorithm/">Algorithm</a> <a class="post-tag" href="/tags/effective-java/">Effective Java</a> <a class="post-tag" href="/tags/hands-on-reactive-programming-in-spring-5/">Hands-On Reactive Programming in Spring 5</a></div></div></div><div id="toc-wrapper" class="pl-0 pr-4 mb-5"><div class="panel-heading pl-3 pt-2 mb-2">Contents</div><nav id="toc"></nav></div><script src="https://cdn.jsdelivr.net/npm/tocbot@4.20.1/dist/tocbot.min.js"></script></div></div><div class="row"><div id="tail-wrapper" class="col-12 col-lg-11 col-xl-9 pl-3 pr-3 pr-xl-4 mt-5"><div id="related-posts" class="mb-2 mb-sm-4"><h3 class="pt-2 mb-4 ml-1" data-toc-skip>Further Reading</h3><div class="card-deck mb-4"><div class="card"> <a href="/posts/devlog-platform-kubernetes-in-action1/"><div class="card-body"> <em class="small" data-ts="1596270840" data-df="ll" > Aug 1, 2020 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[kubernetes-in-action] 1. 쿠버네티스 소개</h3><div class="text-muted small"><p> 1. 쿠버네티스 소개 쿠버네티스 등장 배경 거대한 모놀리스 레거시 애플리케이션은 점차 마이크로 서비스라는 독립적으로 실행되는 더 작은 구성 요소로 세분화되고 있다. 마이크로 서비스는 서루 분리돼 있기 떄문에 개별적으로 개발, 배포, 업데이트, 확장할 수 있다. 이로써 오늘날 급변하는 비즈니스 요구사항을 충족시킬 만큼 신속하게 자주 구성 요소를 변...</p></div></div></a></div><div class="card"> <a href="/posts/devlog-platform-kubernetes-in-action2/"><div class="card-body"> <em class="small" data-ts="1596357240" data-df="ll" > Aug 2, 2020 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[kubernetes-in-action] 2. 도커와 쿠버네티스 첫걸음</h3><div class="text-muted small"><p> 2. 도커와 쿠버네티스 첫걸음 2.1 도커를 사용한 컨테이너 이미지 생성, 실행, 공유하기 2.1.1 Hello World 컨테이너 실행하기 docker run busybox echp &quot;Hello world&quot; 백그라운드에 일어난 동작 이해하기 docker run 명령을 수행했을 떄 일어나는 일들 2.1.2 간단한 node.js 애플리...</p></div></div></a></div><div class="card"> <a href="/posts/devlog-platform-kubernetes-in-action3/"><div class="card-body"> <em class="small" data-ts="1596443640" data-df="ll" > Aug 3, 2020 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>[kubernetes-in-action] 3. 파드 : 쿠버네티스에서 컨테이너 실행</h3><div class="text-muted small"><p> 3. 파드 : 쿠버네티스에서 컨테이너 실행 3.1 파드 소개 파드는 함께 배치된 컨테이너 그룹이며, 쿠버네티스의 기본 빌딩 블록. 컨테이너를 개별적으로 배포하기보다는 컨테이너를 가진 파드를 배포하고, 운영한다. 무조건 2개 이상을 컨테이너를 포함시키라는 의미는 아니고 일반적으로는 하나의 컨테이너만 포함된다. 파드의 핵심은 파드가 여러 ...</p></div></div></a></div></div></div><div class="post-navigation d-flex justify-content-between"> <a href="/posts/devlog-platform-kubernetes-in-action4/" class="btn btn-outline-primary" prompt="Older"><p>[kubernetes-in-action] 4. 레플리케이션과 그 밖의 컨트롤러 : 관리되는 파드 배포</p></a> <a href="/posts/devlog-platform-kubernetes-in-action6/" class="btn btn-outline-primary" prompt="Newer"><p>[kubernetes-in-action] 6. 볼륨 : 컨테이너에 디스크 스토리지 연결</p></a></div><div id="disqus_thread" class="pt-2 pb-2"><p class="text-center text-muted small">Comments powered by <a href="https://disqus.com/">Disqus</a>.</p></div><script type="text/javascript"> var disqus_config = function () { this.page.url = 'https://sungsu9022.github.io/posts/devlog-platform-kubernetes-in-action5/'; this.page.identifier = '/posts/devlog-platform-kubernetes-in-action5/'; }; /* Lazy loading */ var disqus_observer = new IntersectionObserver( function (entries) { if (entries[0].isIntersecting) { (function () { var d = document, s = d.createElement('script'); s.src = 'https://sungsu-parks-tech-blog.disqus.com/embed.js'; s.setAttribute('data-timestamp', +new Date()); (d.head || d.body).appendChild(s); })(); disqus_observer.disconnect(); } }, { threshold: [0] } ); disqus_observer.observe(document.querySelector('#disqus_thread')); /* Auto switch theme */ function reloadDisqus() { if (event.source === window && event.data && event.data.direction === ModeToggle.ID) { /* Disqus hasn't been loaded */ if (typeof DISQUS === 'undefined') { return; } if (document.readyState == 'complete') { DISQUS.reset({ reload: true, config: disqus_config }); } } } if (document.querySelector('.mode-toggle')) { window.addEventListener('message', reloadDisqus); } </script></div></div></div><div id="search-result-wrapper" class="d-flex justify-content-center unloaded"><div class="col-12 col-sm-11 post-content"><div id="search-hints"><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/spark/">Spark</a> <a class="post-tag" href="/tags/infra/">Infra</a> <a class="post-tag" href="/tags/java/">Java</a> <a class="post-tag" href="/tags/kubernetes-in-action/">kubernetes-in-action</a> <a class="post-tag" href="/tags/kubernetes/">kubernetes</a> <a class="post-tag" href="/tags/elasticsearch/">Elasticsearch</a> <a class="post-tag" href="/tags/spring/">Spring</a> <a class="post-tag" href="/tags/algorithm/">Algorithm</a> <a class="post-tag" href="/tags/effective-java/">Effective Java</a> <a class="post-tag" href="/tags/hands-on-reactive-programming-in-spring-5/">Hands-On Reactive Programming in Spring 5</a></div></div></div><div id="search-results" class="d-flex flex-wrap justify-content-center text-muted mt-3"></div></div></div></div><footer><div class="container pl-lg-4 pr-lg-4"><div class="d-flex justify-content-between align-items-center text-muted ml-md-3 mr-md-3"><div class="footer-left"><p class="mb-0"> © 2024 <a href="https://twitter.com/sungsu9022dev">sungsu9022</a>. <span data-toggle="tooltip" data-placement="top" title="Except where otherwise noted, the blog posts on this site are licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License by the author.">Some rights reserved.</span></p></div><div class="footer-right"><p class="mb-0">Powered by <a href="https://jekyllrb.com" target="_blank" rel="noopener">Jekyll</a> with <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> theme.</p></div></div></div></footer><div id="mask"></div><a id="back-to-top" href="#" aria-label="back-to-top" class="btn btn-lg btn-box-shadow" role="button"> <i class="fas fa-angle-up"></i> </a> <script src="https://cdn.jsdelivr.net/npm/simple-jekyll-search@1.10.0/dest/simple-jekyll-search.min.js"></script> <script> SimpleJekyllSearch({ searchInput: document.getElementById('search-input'), resultsContainer: document.getElementById('search-results'), json: '/assets/js/data/search.json', searchResultTemplate: '<div class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-lg-4 pr-lg-4 pl-xl-0 pr-xl-0"> <a href="{url}">{title}</a><div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1"> {categories} {tags}</div><p>{snippet}</p></div>', noResultsText: '<p class="mt-5">Oops! No result founds.</p>', templateMiddleware: function(prop, value, template) { if (prop === 'categories') { if (value === '') { return `${value}`; } else { return `<div class="mr-sm-4"><i class="far fa-folder fa-fw"></i>${value}</div>`; } } if (prop === 'tags') { if (value === '') { return `${value}`; } else { return `<div><i class="fa fa-tag fa-fw"></i>${value}</div>`; } } } }); </script> <script src="https://cdn.jsdelivr.net/combine/npm/magnific-popup@1/dist/jquery.magnific-popup.min.js,npm/lazysizes@5.3.2/lazysizes.min.js,npm/clipboard@2/dist/clipboard.min.js"></script> <script src="https://cdn.jsdelivr.net/combine/npm/dayjs@1/dayjs.min.js,npm/dayjs@1/locale/en.min.js,npm/dayjs@1/plugin/relativeTime.min.js,npm/dayjs@1/plugin/localizedFormat.min.js"></script> <script defer src="/assets/js/dist/post.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.bundle.min.js"></script> <script defer src="/unregister.js"></script> <script defer src="https://www.googletagmanager.com/gtag/js?id=UA-145894105-1"></script> <script> document.addEventListener("DOMContentLoaded", function(event) { window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-145894105-1'); }); </script>
